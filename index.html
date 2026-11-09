@@ -765,8 +765,9 @@ function applyTier(i){tierIdx=i;const T=TIERS[i];C0.set(T.c[0]);C1.set(T.c[1]);C
 [glowDisc,rOut,rBig].forEach(m=>m.material.color.copy(C1));rIn.material.color.copy(C0);cylU.col.value.copy(C1);hxU.col.value.copy(C1);emi.color.copy(C0);gemH.material.color.copy(C1);pL.color.copy(C1);crown.material.color.copy(C0);crownH.material.color.copy(C1);
 arc.material.color.copy(C1);shocks[0].material.color.copy(C1);shocks[1].material.color.copy(C0);spirits.forEach(s=>{s.children[0].material.color.copy(C0);s.children[1].material.color.copy(C1)});projMat.color.copy(C1);
 activeAN=Math.floor(Math.min(AN,70+i*16)*AL().p);hel.visible=i>=2&&AL().hel;rBig.visible=i>=4;crown.visible=crownH.visible=i>=5;wings.forEach(w=>w.visible=i>=6);wingMat.color.copy(C1);vRings.forEach(r=>r.visible=i>=7);vMat.color.copy(C0);cylU.pw.value=(.7+i*.12)*AL().cyl;const s=1+i*.06;rOut.scale.setScalar(s);rIn.scale.setScalar(s);glowDisc.scale.setScalar(1+i*.1);
-// com o pixelfx, a aura é o efeito próprio em volta do corpo (auraSet) e as peças 3D do chão e do tubo saem
-if(pfxOK()){[glowDisc,rOut,rIn,rBig,cyl,hel,crown,crownH,...vRings,...wings].forEach(o=>o.visible=false);auraSet(i)}
+// com o pixelfx, a aura é o efeito próprio em volta do corpo (auraSet) e as peças 3D do chão, do tubo e as partículas
+// que giravam nos pés saem; a luz da aura sobe para o peito, para não fazer uma mancha clara no chão
+if(pfxOK()){[glowDisc,rOut,rIn,rBig,cyl,hel,crown,crownH,aPts,...vRings,...wings].forEach(o=>o.visible=false);pL.position.y=1.6;auraSet(i)}
 $('tier').textContent='AURA '+T.n.toUpperCase()}
 // ===================== partículas =====================
 const BN=700,bg=new THREE.BufferGeometry(),bpos=new Float32Array(BN*3),bcol=new Float32Array(BN*3),BP=[];
@@ -929,7 +930,7 @@ const pfxOK=()=>!!window.PixelFX;
 // Um estilo por tier, desenhado em volta do corpo, nunca no chão. Duas camadas: a de trás fica um pouco atrás do herói
 // e a da frente um pouco à frente, as duas sobre o raio da câmera que passa pelos pés, para o desenho ficar alinhado
 // ao herói enquanto o próprio herói 3D cobre o meio da camada de trás.
-const AURA={fx:null,parts:[],acc:1,tier:-1},AURA_HZ=20,AURA_HZ_LITE=10,AURA_BACK=.15,AURA_FRONT=.35;
+const AURA={fx:null,parts:[],acc:1,tier:-1},AURA_HZ=20,AURA_HZ_LITE=10,AURA_BACK=.15,AURA_FRONT=.35,AURA_HERO_H=2,tmp2=new THREE.Vector3();
 function auraPart(w,h,ox,oy,order){const P=window.PixelFX,cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
  const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:true}),spr=new THREE.Sprite(mat);spr.center.set(ox/w,1-oy/h);spr.renderOrder=order;spr.visible=false;sc.add(spr);
@@ -942,8 +943,11 @@ function auraSet(i){const P=window.PixelFX;if(!P||!P.FX.aura)return;const m=P.FX
 function auraUpd(dt){if(AURA.fx){AURA.fx.update(dt);AURA.acc+=dt}}
 function auraDraw(){if(!AURA.fx)return;const P=window.PixelFX,[b,f]=AURA.parts,hp=hero.position;
  const r=tmp.copy(hp).sub(cam.position),dist=r.length();r.divideScalar(dist);const rh=Math.hypot(r.x,r.z)||1,[w,h]=P.FX.aura.meta.size;
- // tamanho e força pela intensidade escolhida na aba Herói (Suave, Média, Intensa)
- const lv=S.auraLv??1,k=PFX_BODY/PFX_PPU*[.92,1,1.08][lv],op=[.6,.85,1][lv];
+ // o corpo da aura (BODY_TOP px) tem a altura do herói na tela: mede pés e cabeça projetados e converte para o mundo
+ const yF=tmp2.copy(hp).project(cam).y,yH=tmp2.set(hp.x,hp.y+AURA_HERO_H,hp.z).project(cam).y,tanF=Math.tan(cam.fov*Math.PI/360);
+ const k=(yH-yF)/2*2*tanF*dist/(P.FX.aura.BODY_TOP||30);
+ // força pela intensidade escolhida na aba Herói (Suave, Média, Intensa)
+ const lv=S.auraLv??1,op=[.75,.95,1][lv];
  for(const [q,s] of [[b,AURA_BACK],[f,-AURA_FRONT]]){const tt=s/rh,sc2=(dist+tt)/dist;q.spr.position.set(hp.x+r.x*tt,hp.y+r.y*tt+.02,hp.z+r.z*tt);q.spr.scale.set(w*k*sc2,h*k*sc2,1);q.mat.opacity=op}
  if(AURA.acc<1/(GFX()===0?AURA_HZ_LITE:AURA_HZ))return;AURA.acc=0;
  for(const [q,layer] of [[b,'back'],[f,'front']]){P.clearFrame(q.fr);AURA.fx.draw(q.fr,layer);P.composite(q.fr,q.img.data,null);q.cx.putImageData(q.img,0,0);q.tex.needsUpdate=true;q.spr.visible=true}}
@@ -1357,7 +1361,7 @@ const ca=capeG.attributes.position.array;for(let i=0;i<ca.length;i+=3){const yy=
 // aura
 auraG.position.copy(hero.position);const pu=.85+.15*Math.sin(t*2.4)+(furyT>0?.3:0);rOut.rotation.z=t*.3;rIn.rotation.z=-t*.5;rBig.rotation.z=-t*.15;wings.forEach(w=>w.rotation.y=w.userData.s*(.35+Math.sin(t*2.2)*.18));vRings[0].rotation.set(Math.PI/2+Math.sin(t*.7)*.5,t*.8,0);vRings[1].rotation.set(Math.PI/2+Math.cos(t*.6)*.6,-t*.6,.4);
 if(tierIdx>=9){C1.setHSL((t*.08)%1,.9,.62);[glowDisc,rOut,rBig].forEach(m=>m.material.color.copy(C1));cylU.col.value.copy(C1);wingMat.color.copy(C1);pL.color.copy(C1);gemH.material.color.copy(C1)}glowDisc.material.opacity=.7*pu;cylU.t.value=t;hxU.t.value=t;hel.rotation.y=t*.9;crown.rotation.z=t;
-pL.intensity+=((1.3+tierIdx*.12)*pu*AL().light-pL.intensity)*Math.min(1,dt*5);gemH.scale.setScalar(.2+.04*Math.sin(t*3));
+pL.intensity+=((1.3+tierIdx*.12)*pu*AL().light*(AURA.fx?.4:1)-pL.intensity)*Math.min(1,dt*5);gemH.scale.setScalar(.2+.04*Math.sin(t*3));
 for(let i=0;i<AN;i++){const p=AP[i];if(i>=activeAN){acol[i*3]=acol[i*3+1]=acol[i*3+2]=0;continue}p.l+=dt;if(p.l>p.m)asp(p,false);p.a+=p.d*dt;p.h+=p.v*dt*(furyT>0?1.8:1);p.r=Math.max(.7,p.r*(1-dt*.05));const k=p.l/p.m,fd=Math.min(1,k*6)*(1-k);apos[i*3]=Math.cos(p.a)*p.r;apos[i*3+1]=p.h;apos[i*3+2]=Math.sin(p.a)*p.r;const c=furyT>0&&i%3===0?FURYC:(k<.25?C0:C1);acol[i*3]=c.r*fd;acol[i*3+1]=c.g*fd;acol[i*3+2]=c.b*fd}
 ag.attributes.position.needsUpdate=true;ag.attributes.color.needsUpdate=true;
 if(shockT<.6){shockT+=dt;shocks.forEach((s,i)=>{const k=Math.min(1,(shockT-i*.08)/.45);if(k<0){s.material.opacity=0;return}s.position.set(shockP.x,.08+i*.02,shockP.z);s.scale.setScalar(.3+k*shockR);s.material.opacity=(1-k)*.95})}else shocks.forEach(s=>s.material.opacity=0);

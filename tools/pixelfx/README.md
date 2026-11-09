@@ -44,12 +44,16 @@ porque custava 8 ms em média, com picos de 45 ms.
 
 `tools/pixelfx/fx/` guarda efeitos próprios do jogo, importados por `entry.js` como os do pixelfx. Hoje:
 
-- `aura.js`: a aura do herói. Usa a silhueta do boneco do pixelfx (`stockActor(2)`, a proporção do herói 3D) para
-  calcular a distância até o corpo, e cada estilo desenha no contorno: 0 Comum, contorno que respira; 1 Incomum, vento
-  e folhas; 2 Rara, faíscas elétricas; 3 Épica, chamas roxas; 4 Lendária, fogo e brasas; 5 Mítica, chamas de coração
-  escuro e fumaça; 6 Ancestral, espíritos com cauda; 7 Exaltada, cristais em órbita; 8 Divina, raios e auréola;
-  9 Primordial, fogo cósmico em arco-íris e estrelas. `drawBack` vai atrás do herói 3D e `draw` na frente; no jogo,
-  as duas camadas ficam sobre o raio da câmera que passa pelos pés (`auraDraw`). Redesenho a 20 qps (10 no Leve).
+- `aura.js`: a aura do herói. O corpo é um volume do tamanho do herói 3D como ele aparece na tela (tronco em
+  elipse e cabeça, `BODY_TOP` = 30 px); a distância até esse corpo diz onde fica o contorno, e cada estilo desenha
+  em volta dele: 0 Comum, contorno que respira e pulso; 1 Incomum, redemoinho de vento e folhas; 2 Rara, raios
+  pulando pelo corpo e saindo para fora; 3 Épica, chamas roxas; 4 Lendária, fogo e brasas; 5 Mítica, chamas de
+  coração escuro, fumaça e raios; 6 Ancestral, espíritos com cauda; 7 Exaltada, cristais em órbita; 8 Divina, raios
+  de luz e auréola; 9 Primordial, fogo cósmico em arco-íris e estrelas. Todos têm um brilho suave atrás do corpo.
+  `drawBack` vai atrás do herói 3D e `draw` na frente; no jogo, as duas camadas ficam sobre o raio da câmera que
+  passa pelos pés, e `auraDraw` escala o sprite para que os `BODY_TOP` px tenham a altura do herói projetada na tela
+  (`AURA_HERO_H` = 2 unidades). Redesenho a 20 qps (10 no Leve). As partículas 3D que giravam nos pés ficam
+  escondidas e a luz da aura sobe para o peito, mais fraca, para não fazer mancha no chão.
   Nada é desenhado abaixo dos pés, e `tests/headless/auras.js` confere.
 
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
