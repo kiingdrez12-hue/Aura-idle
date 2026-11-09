@@ -870,10 +870,12 @@ const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,de
 spr.center.set(ox/w,1-oy/h);spr.scale.set(w*k,h*k,1);spr.position.set(x,y,z);spr.renderOrder=20;spr.visible=false;sc.add(spr);
 const e={fx,fr:P.createFrame(w,h),img:cx.createImageData(w,h),cx,tex,mat,spr,life:o.life||1e9,follow:o.follow,acc:1};PFX.push(e);return e}
 function pfxKill(e){sc.remove(e.spr);e.tex.dispose();e.mat.dispose()}
-function pfxUpd(dt){const P=window.PixelFX;if(!P)return;const hz=GFX()===0?1/20:1/40;
+function pfxUpd(dt){if(!window.PixelFX)return;
 for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}
-if(e.follow)e.spr.position.x=e.follow.x,e.spr.position.z=e.follow.z;e.acc+=dt;if(e.acc<hz)continue;e.acc=0;
-P.clearFrame(e.fr);e.fx.draw(e.fr);P.composite(e.fr,e.img.data,null);e.cx.putImageData(e.img,0,0);e.tex.needsUpdate=true;e.spr.visible=true}}
+if(e.follow)e.spr.position.x=e.follow.x,e.spr.position.z=e.follow.z;e.acc+=dt}}
+// desenha só uma vez por quadro renderizado (não a cada step), limitado a ~40 qps (20 no modo Leve)
+function pfxDraw(){const P=window.PixelFX;if(!P||!PFX.length)return;const hz=GFX()===0?1/20:1/40;
+for(const e of PFX){if(e.acc<hz)continue;e.acc=0;P.clearFrame(e.fr);e.fx.draw(e.fr);P.composite(e.fr,e.img.data,null);e.cx.putImageData(e.img,0,0);e.tex.needsUpdate=true;e.spr.visible=true}}
 function hit(e,d,crit,kb,src){if(!e||e.dead)return;e.hp-=d;if(e.wb)wbHit(e,d);e.flash=.1;if(kb){const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=e.boss?.2:1;e.kb.set(dx/l*kb*k,0,dz/l*kb*k)}
 num(e.g.position,(crit?'💥':'')+fmt(d),src==='tap'?'#ff9a5a':src==='sp'?'#'+C0.getHexString():src==='spirit'?'#'+C1.getHexString():crit?'#ffd23a':'#ffffff',crit||src==='sp'?21:src==='spirit'?12:15);
 {const q=e.g.position,s=e.boss?1.5:1;if(crit)pfx('critHit',q.x,.8*s,q.z,{scale:s,flip:q.x<hero.position.x});else if(src!=='spirit')pfx('hitSpark',q.x,.8*s,q.z,{scale:s,minor:1,flip:q.x<hero.position.x})}
@@ -1320,7 +1322,7 @@ lookT.lerp(zoomCam?tmp.set(hero.position.x,1.2,hero.position.z):tmp.set(hero.pos
 moon.position.set(hero.position.x-6,12,hero.position.z+6);moon.target.position.copy(hero.position);
 const r=rd.domElement.getBoundingClientRect();
 for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.l+=dt;n.p.y+=dt*n.vy;n.vy*=.96;tmp.copy(n.p).project(cam);const sc2=n.l<.12?.6+n.l/.12*.6:1.2-Math.min(.2,(n.l-.12));n.el.style.transform=`translate(${(tmp.x+1)/2*r.width}px,${(1-tmp.y)/2*r.height}px) translate(-50%,-50%) scale(${sc2})`;{const sy=(1-tmp.y)/2*r.height,hf=Math.max(0,Math.min(1,(sy-HUDB)/28));n.el.style.opacity=(n.l>.7?1-(n.l-.7)/.4:1)*hf}if(n.l>1.1){n.el.remove();nums.splice(i,1)}}
-if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
+pfxDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
 function updHud(){$('goldv').textContent=fmt(S.gold);$('gps').textContent='+'+fmt(S.gps)+'/s'+(furyT>0?'  ·  FÚRIA x2':'')+(Date.now()<(S.boostUntil||0)?'  ·  OURO x2 '+Math.ceil((S.boostUntil-Date.now())/60000)+'min':'');$('lvl').textContent='Nv '+S.lvl;$('xp').style.width=(S.xp/xpNeed(S.lvl)*100)+'%';
 const sb=$('sbar');if(tower.on&&tower.wb){const B=wbBoss();$('stg').textContent='CHEFE MUNDIAL';$('world').textContent=B.n;sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/WB_T*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=B.ic+' DANO '+fmt(tower.run||0)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else if(tower.on){$('stg').textContent='TORRE · ANDAR '+tower.f;$('world').textContent='Torre de Desafio';sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/40*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=(tower.boss?'GUARDIÃO':'ABATES '+Math.min(tower.kills,tower.need)+'/'+tower.need)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else{$('world').textContent=$('world').textContent==='Torre de Desafio'?WORLDS[worldOf(S.stage)].n:$('world').textContent;
 $('stg').textContent='ESTÁGIO '+S.stage+(S.stage%10===0?' 💀':'');
