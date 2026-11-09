@@ -22,7 +22,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | monstro / elite / chefão derrotado | `spawn/poof` / `explosions/plasma-explosion` / a mesma em tons de fogo e maior |
 | chegada do chefão | `spawn/spawn-portal` |
 | fúria | `lightning/thunderclap` (com silhueta vazia, para não desenhar o boneco do pixelfx) |
-| item raro ou melhor no chão / coletado | `pickups/loot-beam` / `pickups/collect-burst`, na cor da raridade |
+| qualquer item no chão / item raro coletado | `tools/pixelfx/fx/loot-aura.js` (versão própria do `pickups/loot-beam`: espada com brilho só em volta, sem coluna de luz) / `pickups/collect-burst`, na cor da raridade |
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
 | nova aura | `holy/holy-pillar` (nas cores da aura) |
 
@@ -37,6 +37,15 @@ dos quais `PFX_MINOR` = 5 menores; redesenho a 30 qps (15 no modo Leve); e `PFX_
 o que passar disso fica para o próximo quadro, em rodízio. No modo Leve os efeitos `minor` não aparecem e o limite cai
 para 4. Medido a 390 px em combate pesado: cerca de 4 ms por quadro em média. `explosions/big-explosion` foi tirado
 porque custava 8 ms em média, com picos de 45 ms.
+
+## Efeitos próprios
+
+`tools/pixelfx/fx/` guarda efeitos adaptados para o jogo, importados por `entry.js` como os do pixelfx. Hoje:
+`loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
+para raridades altas), sem a coluna de luz.
+
+O teste `tests/headless/efeitos-pixelfx.js` dispara cada situação do jogo e confere que **todo** efeito do pacote é
+criado e desenha pixels. Ao adicionar um efeito ao pacote, ligue-o no jogo, ou o teste falha.
 
 ## Adicionar ou trocar efeitos
 

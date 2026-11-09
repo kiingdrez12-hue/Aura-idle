@@ -5,7 +5,8 @@ import * as hitSpark from "pixelfx/fx/impacts/hit-spark";
 import * as critHit from "pixelfx/fx/impacts/crit-hit";
 import * as poof from "pixelfx/fx/spawn/poof";
 import * as plasmaExplosion from "pixelfx/fx/explosions/plasma-explosion";
-import * as lootBeam from "pixelfx/fx/pickups/loot-beam";
+// versão própria do Aura Idle: espada com brilho só em volta, sem coluna de luz
+import * as lootAura from "./fx/loot-aura.js";
 import * as manaBurst from "pixelfx/fx/arcane/mana-burst";
 import * as holyPillar from "pixelfx/fx/holy/holy-pillar";
 import * as swordSlash from "pixelfx/fx/melee/sword-slash";
@@ -23,7 +24,7 @@ import * as collectBurst from "pixelfx/fx/pickups/collect-burst";
 window.PixelFX = {
   createFrame, clearFrame, createFx, composite,
   FX: {
-    hitSpark, critHit, poof, plasmaExplosion, lootBeam, manaBurst, holyPillar,
+    hitSpark, critHit, poof, plasmaExplosion, lootAura, manaBurst, holyPillar,
     swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, smite, spawnPortal, collectBurst,
   },
 };

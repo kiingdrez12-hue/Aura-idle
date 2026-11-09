@@ -1,0 +1,35 @@
+// Todo efeito do pacote vendor/pixelfx.js aparece no jogo: cada situação é disparada de propósito
+// e o teste confere que cada efeito foi criado e desenhou pixels visíveis.
+const ok=(c,m)=>{if(!c)throw new Error('FALHOU: '+m)};
+module.exports={
+ seed:{gold:1e9,lvl:4,stage:9,maxStage:9,best:9,souls:40,asc:3,iv:2,total:5,cls:'knight',ucls:['knight','mage','archer','paladin'],login:{last:'x',streak:1,claimed:true},up:{dmg:60,spd:10,crit:10,gold:5,aura:10,spirit:0,xp:0},gfx:1,gfxAuto:0},
+ run:async p=>p.evaluate(()=>{
+  const all=Object.keys(PixelFX.FX),seen={},drew={};
+  const idOf=e=>all.find(k=>PixelFX.FX[k].meta===e.fx.meta);
+  const _pfx=pfx;pfx=function(id,...a){const e=_pfx(id,...a);if(e)seen[id]=(seen[id]||0)+1;return e};
+  // desenha e anota quem pintou algum pixel visível
+  const draw=()=>{PFX.forEach(e=>e.acc=1);pfxDraw();PFX.forEach(e=>{const d=e.img.data;for(let i=3;i<d.length;i+=16)if(d[i]>0){drew[idOf(e)]=1;break}})};
+  const run=n=>{for(let i=0;i<n;i++){step(.05);if(i%3===0)draw()}};
+  const clear=()=>{PFX.splice(0).forEach(pfxKill)};
+  const near=()=>{let e=enemies.find(x=>!x.dead&&!x.boss);if(!e)e=spawnEnemy('slime');e.g.position.set(hero.position.x+1,0,hero.position.z);target=e;return e};
+  const rnd=Math.random;
+  for(const k of ['knight','mage','archer','paladin']){
+   S.cls=k;buildHero();applyTier(tierIdx);
+   // golpe normal e crítico
+   for(const c of [false,true]){clear();Math.random=()=>c?0:.99;near();atkT=0;attack();Math.random=rnd;run(30)}
+   // especial
+   clear();near();special();run(70)}
+  // fúria
+  clear();S.fk=FN()-1;const e1=near();kill(e1);run(30);
+  // monstro, elite e chefão
+  clear();kill(near());run(20);
+  clear();const el=spawnEnemy('slime',true);kill(el);run(20);
+  clear();S.kills=10;bossOn=false;run(10);const b=enemies.find(x=>x.boss&&!x.dead);if(b)kill(b);run(30);
+  // subir de nível e nova aura
+  clear();addXp(xpNeed(S.lvl)*1.01);run(20);
+  clear();S.tier=0;addXp(xpNeed(S.lvl)*1.01);tierUp(1);run(30);
+  // item raro no chão e coletado
+  clear();dropItem(hero.position,4,S.stage);run(120);
+  pfx=_pfx;
+  return {all,seen,drew,naoCriados:all.filter(k=>!seen[k]),semPixels:all.filter(k=>!drew[k])}}),
+ check:r=>{ok(r.naoCriados.length===0,'efeitos nunca criados: '+r.naoCriados.join(', '));ok(r.semPixels.length===0,'efeitos sem pixels visiveis: '+r.semPixels.join(', '))}};

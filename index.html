@@ -821,9 +821,12 @@ for(let i=0;i<C.items;i++)setTimeout(()=>dropItem(c.g.position,rollR(C.w),S.stag
 if(c.ti>=2){shake=.25+c.ti*.08;flashScreen(.15+c.ti*.08)}if(tapped)feed('📦 '+C.n+' aberto!',C.css);invDirty=true}
 // drops de itens
 const drops=[];
-function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();if(r>=2)pfx('lootBeam',pos.x,0,pos.z,{palette:['#'+col.clone().multiplyScalar(.25).getHexString(),'#'+col.getHexString(),'#ffffff']});const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
-const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06+r*.03,.2+r*.06,3+r*1.2,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.6}));beam.position.y=(3+r*1.2)/2;g.add(beam);if(r===0||(r>=2&&pfxOK()))beam.visible=false;const h=halo(.9+r*.25,col);h.position.y=.5;g.add(h);
-const a=Math.random()*6.283,d=.6+Math.random()*1.2;g.position.set(pos.x+Math.cos(a)*d,0,pos.z+Math.sin(a)*d);sc.add(g);drops.push({g,gem,beam,it:makeItem(r,il),t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
+function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
+const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06+r*.03,.2+r*.06,3+r*1.2,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.6}));beam.position.y=(3+r*1.2)/2;g.add(beam);const h=halo(.9+r*.25,col);h.position.y=.5;g.add(h);
+const a=Math.random()*6.283,d=.6+Math.random()*1.2;g.position.set(pos.x+Math.cos(a)*d,0,pos.z+Math.sin(a)*d);sc.add(g);
+// item no chão: espada do pixelfx com brilho da raridade só em volta (sem feixe para cima); sem pixelfx, a joia 3D
+const fx=pfx('lootAura',g.position.x,0,g.position.z,{scale:1.3,follow:g.position,palette:['#'+col.clone().multiplyScalar(.2).getHexString(),'#'+col.clone().multiplyScalar(.6).getHexString(),'#'+col.getHexString(),'#ffffff'],power:r/7});
+beam.visible=!fx&&r>=1;drops.push({g,gem,beam,halo:h,fx,it:makeItem(r,il),t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
 if(r>=3){shake=Math.max(shake,.2+r*.06);SFX.tier()}else tone(660+r*200,.18,'triangle',.1)}
 function addItem(it){if(S.items.length>=60){const pool=S.items.filter(i=>!isEq(i)).sort((a,b)=>a.r-b.r||itemScore(a)-itemScore(b));const low=pool[0];if(low&&low.r<=it.r){S.items.splice(S.items.indexOf(low),1);S.frag+=fragOf(low)}else{S.frag+=fragOf(it);feed('Mochila cheia · desmanchado','#9fe8ff');return}}
 const R=RAR[it.r],bt=isBetter(it);if(S.autoSal[it.r]&&!bt){const f=fragOf(it);S.frag+=f;S.found++;invDirty=true;return}
@@ -867,7 +870,7 @@ function nearest(){let b=null,bd=1e9;enemies.forEach(e=>{if(e.dead)return;const 
 const PFX=[],PFX_PPU=26,PFX_MAX=8,PFX_MINOR=5,PFX_HZ=30,PFX_HZ_LITE=15,PFX_BUDGET=4;let pfxRR=0;
 function pfx(id,x,y,z,o={}){const P=window.PixelFX;if(!P||!P.FX[id])return null;const lite=GFX()===0;
 if(o.minor&&(lite||PFX.length>=PFX_MINOR))return null;while(PFX.length>=(lite?4:PFX_MAX))pfxKill(PFX.shift());
-const mod=P.FX[id],[w,h]=mod.meta.size,[ox,oy]=mod.meta.origin,op={x:ox,y:oy,seed:Math.random()*1e9|0,flip:!!o.flip};if(o.palette)op.palette=o.palette;if(o.accent)op.accent=o.accent;if(o.actor)op.actor=o.actor;
+const mod=P.FX[id],[w,h]=mod.meta.size,[ox,oy]=mod.meta.origin,op={x:ox,y:oy,seed:Math.random()*1e9|0,flip:!!o.flip};if(o.palette)op.palette=o.palette;if(o.accent)op.accent=o.accent;if(o.power!=null)op.power=o.power;if(o.actor)op.actor=o.actor;
 const fx=P.createFx(mod,op),cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
 const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
 const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false}),spr=new THREE.Sprite(mat),k=(o.scale||1)/PFX_PPU;
@@ -1319,8 +1322,8 @@ chests.forEach((c,i)=>{c.t+=dt;const g=c.g;if(!c.open){g.scale.setScalar(c.s);co
 else{c.open+=dt;c.lid.rotation.x=-Math.min(1.9,c.open*7);if(c.beam){c.beam.material.opacity=Math.max(0,.7-c.open*.5);c.beam.scale.x=c.beam.scale.z=1+c.open*.6}if(c.open>1.3)g.scale.setScalar(Math.max(0,c.s*(1-(c.open-1.3)*4)))}});
 chests=chests.filter(c=>{if(c.open>1.55){sc.remove(c.g);if(c.beam)sc.remove(c.beam);return false}return true});
 // drops
-for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.t+=dt;d.gem.rotation.y+=dt*3;d.gem.position.y=.5+Math.sin(t*4)*.08;if(d.r===0||(d.r>=2&&pfxOK()))d.beam.visible=false;d.beam.material.opacity=.55+.25*Math.sin(t*6);
-if(d.t>1.4+d.r*.25){d.beam.visible=false;d.beam.userData.off=1;tmp.set(hero.position.x,1,hero.position.z).sub(d.g.position);tmp.y-=.5;const dd=tmp.length();d.g.position.addScaledVector(tmp.normalize(),Math.min(dd,(5+(d.t-1.4)*25)*dt));if(dd<.5){if(d.r>=2){const c=new THREE.Color(RAR[d.r].c);pfx('collectBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#'+c.clone().multiplyScalar(.3).getHexString(),'#'+c.getHexString(),'#ffffff']})}addItem(d.it);sc.remove(d.g);drops.splice(i,1);tone(880+d.r*150,.15,'triangle',.12)}}}
+for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.t+=dt;d.gem.rotation.y+=dt*3;d.gem.position.y=.5+Math.sin(t*4)*.08;const fxOn=!!d.fx&&PFX.includes(d.fx);d.gem.visible=d.halo.visible=!fxOn;d.beam.visible=!d.fx&&d.r>=1&&!d.beam.userData.off;d.beam.material.opacity=.55+.25*Math.sin(t*6);
+if(d.t>1.4+d.r*.25){d.beam.visible=false;d.beam.userData.off=1;tmp.set(hero.position.x,1,hero.position.z).sub(d.g.position);tmp.y-=.5;const dd=tmp.length();d.g.position.addScaledVector(tmp.normalize(),Math.min(dd,(5+(d.t-1.4)*25)*dt));if(dd<.5){if(d.fx)d.fx.fx.stop();if(d.r>=2){const c=new THREE.Color(RAR[d.r].c);pfx('collectBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#'+c.clone().multiplyScalar(.3).getHexString(),'#'+c.getHexString(),'#ffffff']})}addItem(d.it);sc.remove(d.g);drops.splice(i,1);tone(880+d.r*150,.15,'triangle',.12)}}}
 // fúria
 if(furyT>0){furyT-=dt;fury=furyT/12*100;if(furyT<=0)fury=0}else fury=S.fk/FN()*100;
 // bursts
