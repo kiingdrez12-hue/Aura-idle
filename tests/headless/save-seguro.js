@@ -1,7 +1,7 @@
 // Exportar, importar (com código errado, alterado e certo), backup, restaurar e apagar.
 const ok=(c,m)=>{if(!c)throw new Error('FALHOU: '+m)};
 module.exports={
- pre:()=>{if(!sessionStorage.getItem('fase')){sessionStorage.setItem('fase','1');localStorage.clear();localStorage.setItem('auraIdleSave1',JSON.stringify({gold:5,lvl:42,stage:61,maxStage:61,best:77,asc:3,souls:9,name:'Zé Ação',iv:2,total:5,login:{last:'x',streak:1,claimed:true}}))}},
+ seed:{gold:5,lvl:42,stage:61,maxStage:61,best:77,asc:3,souls:9,name:'Zé Ação',iv:2,total:5,login:{last:'x',streak:1,claimed:true}},
  run:async p=>{const o={};const closeAll=()=>p.evaluate(()=>document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')));
   await closeAll();await p.click('.tab[data-t=prof]');await p.waitForTimeout(300);
   // exportar

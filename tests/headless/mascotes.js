@@ -1,6 +1,6 @@
 const ok=(c,m)=>{if(!c)throw new Error('FALHOU: '+m)};
 module.exports={
- pre:()=>{localStorage.setItem('auraIdleSave1',JSON.stringify({gold:0,lvl:30,stage:25,maxStage:25,best:25,total:5,login:{last:'x',streak:1,claimed:true},frag:5000,pets:{fox:{lv:10},slime:{lv:4}},petActive:'fox',eggs:[0,0,0]}))},
+ seed:{gold:0,lvl:30,stage:25,maxStage:25,best:25,total:5,login:{last:'x',streak:1,claimed:true},frag:5000,pets:{fox:{lv:10},slime:{lv:4}},petActive:'fox',eggs:[0,0,0]},
  run:async p=>{const o={};
  o.a=await p.evaluate(()=>{const fox=PETS.find(x=>x.k==='fox');const v0=petVal(fox,'dmg',10);
   // repetidos no nível máximo viram cópias

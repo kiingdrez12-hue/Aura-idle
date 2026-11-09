@@ -15,6 +15,8 @@ async function one(file,shot){
  const errs=[];p.on('pageerror',e=>errs.push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text())});
  if(scen.pre)await p.addInitScript(scen.pre,scen.preArg);
  await p.goto('file://'+path.join(H,'game.html'));await p.waitForTimeout(1500);
+ // save inicial: grava uma vez e recarrega (sem init script, que pode rodar de novo a cada reload)
+ if(scen.seed){await p.evaluate(sd=>{saveLock=true;localStorage.clear();localStorage.setItem('auraIdleSave1',JSON.stringify(sd))},scen.seed);await p.reload();await p.waitForTimeout(1500)}
  const out=await scen.run(p);
  try{if(scen.check)scen.check(out)}catch(e){errs.push(e.message)}
  if(shot)await p.screenshot({path:shot});

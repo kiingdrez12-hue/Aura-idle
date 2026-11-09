@@ -3,9 +3,9 @@ const ok=(c,m)=>{if(!c)throw new Error('FALHOU: '+m)};
 const norm=v=>v&&typeof v==='object'?Array.isArray(v)?v.map(norm):Object.keys(v).sort().reduce((o,k)=>(o[k]=norm(v[k]),o),{}):v;
 const eq=(a,b)=>JSON.stringify(norm(a))===JSON.stringify(norm(b));
 module.exports={
- pre:()=>{if(!localStorage.getItem('auraIdleSave1'))localStorage.setItem('auraIdleSave1',JSON.stringify({gold:1e6,lvl:45,stage:60,maxStage:60,best:80,souls:40,asc:3,iv:2,total:5,frag:900,gems:500,eggs:[2,1,0],login:{last:'x',streak:1,claimed:true},pets:{fox:{lv:12,st:1,sh:1},slime:{lv:10}},petActive:'fox',rel:{dmg:3,start:2},ess:25}))},
+  seed:{gold:1e6,lvl:45,stage:60,maxStage:60,best:80,souls:40,asc:3,iv:2,total:5,frag:900,gems:500,eggs:[2,1,0],login:{last:'x',streak:1,claimed:true},pets:{fox:{lv:12,st:1,sh:1},slime:{lv:10}},petActive:'fox',rel:{dmg:3,start:2},ess:25},
  run:async p=>{const o={};
-  o.before=await p.evaluate(()=>{for(let i=0;i<200;i++)step(.05);ensureSeason();ensureWB();addSXP(1300);S.wb.pts=7.5;S.ss.wm[0].c=true;save();return JSON.stringify({ss:S.ss,wb:S.wb,rel:S.rel,ess:S.ess,pets:S.pets,asc:S.ascStart})});
+  o.before=await p.evaluate(()=>{for(let i=0;i<200;i++)step(.05);ensureSeason();ensureWB();addSXP(1300);S.wb.pts=7.5;S.ss.wm[0].c=true;save();saveLock=true;const D=JSON.parse(localStorage.getItem('auraIdleSave1'));return JSON.stringify({ss:D.ss,wb:D.wb,rel:D.rel,ess:D.ess,pets:D.pets,asc:D.ascStart})});
   await p.reload();await p.waitForTimeout(1500);
   o.after=await p.evaluate(()=>JSON.stringify({ss:S.ss,wb:S.wb,rel:S.rel,ess:S.ess,pets:S.pets,asc:S.ascStart}));
   o.tabs=[];for(const t of ['up','inv','pet','jor','tal','hero','prof','asc']){await p.evaluate(()=>document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')));await p.click(`.tab[data-t=${t}]`);await p.waitForTimeout(350);
