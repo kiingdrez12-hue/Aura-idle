@@ -352,6 +352,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="vendor/pixelfx.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 // ===================== números =====================
@@ -817,7 +818,7 @@ for(let i=0;i<C.items;i++)setTimeout(()=>dropItem(c.g.position,rollR(C.w),S.stag
 if(c.ti>=2){shake=.25+c.ti*.08;flashScreen(.15+c.ti*.08)}if(tapped)feed('📦 '+C.n+' aberto!',C.css);invDirty=true}
 // drops de itens
 const drops=[];
-function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
+function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();if(r>=2)pfx('lootBeam',pos.x,0,pos.z,{palette:['#'+col.clone().multiplyScalar(.25).getHexString(),'#'+col.getHexString(),'#ffffff']});const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
 const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06+r*.03,.2+r*.06,3+r*1.2,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.6}));beam.position.y=(3+r*1.2)/2;g.add(beam);const h=halo(.9+r*.25,col);h.position.y=.5;g.add(h);
 const a=Math.random()*6.283,d=.6+Math.random()*1.2;g.position.set(pos.x+Math.cos(a)*d,0,pos.z+Math.sin(a)*d);sc.add(g);drops.push({g,gem,beam,it:makeItem(r,il),t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
 if(r>=3){shake=Math.max(shake,.2+r*.06);SFX.tier()}else tone(660+r*200,.18,'triangle',.1)}
@@ -857,25 +858,43 @@ function gain(v){S.gold+=v;S.total+=v;goldSec+=v;const g=$('gold');g.classList.a
 // ===================== lógica do herói =====================
 let opening=null,kneel=false,target=null,atkT=0,spT=3,face=0,swingT=0,walk=0,shake=0,spiritT=0;
 function nearest(){let b=null,bd=1e9;enemies.forEach(e=>{if(e.dead)return;const d=e.g.position.distanceToSquared(hero.position)-(e.boss?5:0);if(d<bd){bd=d;b=e}});return b}
+// ===================== pixelfx (efeitos em pixel art) =====================
+// Cada efeito do pixelfx (vendor/pixelfx.js) é desenhado num canvas próprio e mostrado como sprite pixelado na cena.
+const PFX=[],PFX_PPU=26;
+function pfx(id,x,y,z,o={}){const P=window.PixelFX;if(!P||!P.FX[id])return null;const lite=GFX()===0;
+if(o.minor&&(lite||PFX.length>=7))return null;while(PFX.length>=(lite?4:12))pfxKill(PFX.shift());
+const mod=P.FX[id],[w,h]=mod.meta.size,[ox,oy]=mod.meta.origin,op={x:ox,y:oy,seed:Math.random()*1e9|0,flip:!!o.flip};if(o.palette)op.palette=o.palette;
+const fx=P.createFx(mod,op),cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
+const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
+const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false}),spr=new THREE.Sprite(mat),k=(o.scale||1)/PFX_PPU;
+spr.center.set(ox/w,1-oy/h);spr.scale.set(w*k,h*k,1);spr.position.set(x,y,z);spr.renderOrder=20;spr.visible=false;sc.add(spr);
+const e={fx,fr:P.createFrame(w,h),img:cx.createImageData(w,h),cx,tex,mat,spr,life:o.life||1e9,follow:o.follow,acc:1};PFX.push(e);return e}
+function pfxKill(e){sc.remove(e.spr);e.tex.dispose();e.mat.dispose()}
+function pfxUpd(dt){const P=window.PixelFX;if(!P)return;const hz=GFX()===0?1/20:1/40;
+for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}
+if(e.follow)e.spr.position.x=e.follow.x,e.spr.position.z=e.follow.z;e.acc+=dt;if(e.acc<hz)continue;e.acc=0;
+P.clearFrame(e.fr);e.fx.draw(e.fr);P.composite(e.fr,e.img.data,null);e.cx.putImageData(e.img,0,0);e.tex.needsUpdate=true;e.spr.visible=true}}
 function hit(e,d,crit,kb,src){if(!e||e.dead)return;e.hp-=d;if(e.wb)wbHit(e,d);e.flash=.1;if(kb){const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=e.boss?.2:1;e.kb.set(dx/l*kb*k,0,dz/l*kb*k)}
 num(e.g.position,(crit?'💥':'')+fmt(d),src==='tap'?'#ff9a5a':src==='sp'?'#'+C0.getHexString():src==='spirit'?'#'+C1.getHexString():crit?'#ffd23a':'#ffffff',crit||src==='sp'?21:src==='spirit'?12:15);
+{const q=e.g.position,s=e.boss?1.5:1;if(crit)pfx('critHit',q.x,.8*s,q.z,{scale:s,flip:q.x<hero.position.x});else if(src!=='spirit')pfx('hitSpark',q.x,.8*s,q.z,{scale:s,minor:1,flip:q.x<hero.position.x})}
 if(e.hp<=0)kill(e)}
 function kill(e){if(e.wb){e.hp=Math.max(1,e.hp);return}e.dead=1;e.dt=0;S.killsAll++;const s=S.stage;const g=goldBase(s)*e.T.m*goldM()*(e.elite?6:1)*(e.boss?(e.mega?20:10)/9:1);
 dropCoins(e.g.position,g,e.boss?24:e.elite?14:3+Math.floor(Math.random()*3));num(e.g.position,'+'+fmt(g),'#ffd966',e.boss?24:16,2.1);
 burst(e.g.position.x,.7,e.g.position.z,e.boss?140:e.elite?60:32,e.elite?0xffcf4a:e.T.col,e.boss?7:4,4);
+{const q=e.g.position;if(e.boss)pfx('bigExplosion',q.x,0,q.z,{scale:1.1,life:2.6});else if(e.elite)pfx('plasmaExplosion',q.x,.9,q.z);else pfx('poof',q.x,0,q.z,{minor:1})}
 addXp(s*1.5*(e.elite?3:1)*(e.boss?5:1)*xpM());
 if(e.boss){dropItem(e.g.position,rollR(DROPW.boss),s);if(e.mega)dropItem(e.g.position,rollR(DROPW.boss),s)}else if(Math.random()<(e.elite?.35:.035)*(EV().drop||1)*(1+.12*RV('loot')))dropItem(e.g.position,rollR(e.elite?DROPW.elite:DROPW.mob),s);
-if(furyT<=0){S.fk+=e.boss?10:e.elite?3:1;if(S.fk>=FN()){S.fk=0;furyT=12;banner('FÚRIA!',FN()+' abates · ataque e ouro em dobro',"#ffb02a");SFX.boom();flashScreen(.4);burst(hero.position.x,1,hero.position.z,80,0xffb02a,6,6)}}
+if(furyT<=0){S.fk+=e.boss?10:e.elite?3:1;if(S.fk>=FN()){S.fk=0;furyT=12;banner('FÚRIA!',FN()+' abates · ataque e ouro em dobro',"#ffb02a");SFX.boom();flashScreen(.4);burst(hero.position.x,1,hero.position.z,80,0xffb02a,6,6);pfx('fireworkBurst',hero.position.x,1.6,hero.position.z)}}
 if(e.tw){if(e.boss)S.bosses++;towerKill(e)}else if(e.boss){bossOn=false;S.bosses++;if(RV('egg')&&Math.random()<.03*RV('egg')){S.eggs[0]++;petDirty=true;feed('🪺 Ninho Dourado · +1 Ovo Comum','#ffd966')}checkProfile(false);ACCS.forEach(a=>{if(a.req.boss&&!S.uacc.includes(a.k)&&S.bosses>=a.req.boss){S.uacc.push(a.k);S.seenHero=0;setTimeout(()=>banner('NOVO ACESSÓRIO!',a.ic+' '+a.n,'#ffd966'),2400)}});shake=.6;flashScreen(.5);SFX.boom();S.stage++;S.kills=0;if(S.stage>S.maxStage){S.maxStage=S.stage;S.best=Math.max(S.best,S.maxStage)}const w=worldOf(S.stage);if((S.stage-1)%10===0){applyWorld(w,true)}else banner('CHEFÃO DERROTADO!','Estágio '+S.stage);checkUnlocks();setTimeout(spawnStageChests,600)}
 else if(!bossOn){S.kills=Math.min(10,S.kills+1)}}
-function addXp(x){S.xp+=x;let up=0;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up++}if(up){SFX.lvl();burst(hero.position.x,.2,hero.position.z,70,0xffd966,5,5);num(hero.position,'NÍVEL '+S.lvl+'!','#ffd966',22,2.3);const ti=tierOf(S.lvl);if(ti>S.tier){S.tier=ti;tierUp(ti)}}}
-function tierUp(i){applyTier(i);checkProfile(false);renderAvatar();SFX.tier();flashScreen(.9);shake=.7;shockT=0;shockR=7;shockP.copy(hero.position);for(let k=0;k<4;k++)burst(hero.position.x,1,hero.position.z,90,k%2?C0:C1,8,8,.5);banner('AURA '+TIERS[i].n.toUpperCase()+'!','Toque em 📣 para compartilhar',TIERS[i].css);$('share').style.boxShadow='0 0 18px var(--c)'}
+function addXp(x){S.xp+=x;let up=0;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up++}if(up){SFX.lvl();burst(hero.position.x,.2,hero.position.z,70,0xffd966,5,5);pfx('manaBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#3a1d00','#a8650b','#ffd966','#fff6c8']});num(hero.position,'NÍVEL '+S.lvl+'!','#ffd966',22,2.3);const ti=tierOf(S.lvl);if(ti>S.tier){S.tier=ti;tierUp(ti)}}}
+function tierUp(i){applyTier(i);checkProfile(false);renderAvatar();SFX.tier();flashScreen(.9);shake=.7;shockT=0;shockR=7;shockP.copy(hero.position);for(let k=0;k<4;k++)burst(hero.position.x,1,hero.position.z,90,k%2?C0:C1,8,8,.5);pfx('holyPillar',hero.position.x,0,hero.position.z,{scale:1.3,follow:hero.position,palette:['#'+C0.clone().multiplyScalar(.25).getHexString(),'#'+C0.getHexString(),'#'+C1.getHexString(),'#ffffff']});banner('AURA '+TIERS[i].n.toUpperCase()+'!','Toque em 📣 para compartilhar',TIERS[i].css);$('share').style.boxShadow='0 0 18px var(--c)'}
 function attack(){const C=CLS();atkT=atkIv();swingT=.22;const L=S.up.crit,c=Math.random()<critC(L),d=dmg()*(c?critM(L):1)*(furyT>0?1.5:1);if(c)shake=Math.max(shake,.12);
 if(C.rng){fireShot(target,d,c);if(S.cls==='archer'){tone(900,.06,'triangle',.05,.6);if(Math.random()<.18){const tg=target;setTimeout(()=>{if(tg&&!tg.dead)fireShot(tg,d,false)},90)}}else tone(420,.15,'sine',.08,2);return}
 SFX.hit(c);arcPiv.position.copy(hero.position);arcPiv.rotation.y=face-Math.PI/2;hit(target,d,c,2.5);
 if(S.cls==='paladin'){holyT=0;holy.position.set(hero.position.x,.1,hero.position.z);enemies.forEach(e=>{if(e===target||e.dead)return;if(e.g.position.distanceTo(hero.position)-e.T.r<2.3)hit(e,d*.4,false,2.5)});return}
 const fx=Math.sin(face),fz=Math.cos(face);enemies.forEach(e=>{if(e===target||e.dead)return;const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,dd=Math.hypot(dx,dz)||.01;if(dd-e.T.r<1.9&&(dx*fx+dz*fz)/dd>.3)hit(e,d*.5,false,2)})}
-function special(){spT=spCdAt(S.up.aura);LF().specials++;const d=spDmgAt(S.up.aura)*(furyT>0?1.5:1),k=S.cls;pL.intensity=14;SFX.boom();num(hero.position,SPN[k]+'!','#'+C0.getHexString(),17,2.7);burst(hero.position.x,.3,hero.position.z,50,C1,5,2,.4);
+function special(){spT=spCdAt(S.up.aura);LF().specials++;const d=spDmgAt(S.up.aura)*(furyT>0?1.5:1),k=S.cls;pL.intensity=14;SFX.boom();num(hero.position,SPN[k]+'!','#'+C0.getHexString(),17,2.7);pfx('magicCircle',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#'+C0.clone().multiplyScalar(.25).getHexString(),'#'+C0.getHexString(),'#'+C1.getHexString(),'#ffffff']});burst(hero.position.x,.3,hero.position.z,50,C1,5,2,.4);
 if(k==='knight'){spinT=1.2;spinTick=0;spinD=d;shake=.2}else if(k==='mage'){meteorSpec(d);shake=.15}else if(k==='archer'){rainSpec(d)}else{judgeSpec(d);shake=.5}}
 function tapAttack(x,y){audioInit();const r=rd.domElement.getBoundingClientRect();let best=null,bd=75;
 chests.forEach(c=>{if(c.open)return;const v=c.g.position.clone().add(new THREE.Vector3(0,.3,0)).project(cam),d=Math.hypot((v.x+1)/2*r.width-x,(1-v.y)/2*r.height-y);if(d<bd){bd=d;best=c}});
@@ -1220,7 +1239,7 @@ function renderTalPg(){renderTal();renderTalHd();const D=['DOM','SEG','TER','QUA
 // ===================== loop =====================
 let t=0,last=performance.now(),uiT=0,saveT=0,abT=0,secT=0;
 const tmp=new THREE.Vector3(),camT=new THREE.Vector3(),lookT=new THREE.Vector3();
-function step(dt){t+=dt;
+function step(dt){t+=dt;pfxUpd(dt);
 // spawn
 if(tower.on){if(tower.wb)updWB(dt);else updTower(dt)}else{
 const alive=enemies.filter(e=>!e.dead&&!e.boss).length,want=Math.min(8,4+Math.floor(S.stage/6));

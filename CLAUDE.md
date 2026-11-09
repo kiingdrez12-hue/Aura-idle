@@ -2,6 +2,7 @@
 
 - Todo o jogo está em `index.html` (HTML + CSS + um único `<script>`). Não há build.
 - Three.js r128 via cdnjs; pós-processamento via cdn.jsdelivr.net/npm/three@0.128.0/examples/js/.
+- Efeitos em pixel art do pixelfx em `vendor/pixelfx.js` (pacote pronto, `window.PixelFX`). Use `pfx(id,x,y,z,opções)`; detalhes e como regenerar em `tools/pixelfx/README.md`.
 - Save em `localStorage` na chave `auraIdleSave1`; objeto `S` mesclado sobre `DEF`. Ao adicionar campos ao save, inclua em `DEF` e na mesclagem do load.
 - Bônus somam em `IT` via `calcIT()` (itens + `petIT()` + `talIT()`). Multiplicadores: `dmgAt`, `goldM`, `xpM`, evento do dia `EV()`.
 - Abas: `data-t` em `.tab` mapeado para painéis `pg*`; renderização ao trocar de aba.

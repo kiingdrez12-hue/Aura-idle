@@ -6,7 +6,8 @@ const fs=require('fs'),path=require('path'),{chromium}=require('playwright');
 const H=__dirname,ROOT=path.join(__dirname,'..','..');
 let html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8')
  .replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','node_modules/three/build/three.min.js')
- .replaceAll('https://cdn.jsdelivr.net/npm/three@0.128.0/','node_modules/three/');
+ .replaceAll('https://cdn.jsdelivr.net/npm/three@0.128.0/','node_modules/three/')
+ .replace('src="vendor/pixelfx.js"','src="../../vendor/pixelfx.js"');
 fs.writeFileSync(path.join(H,'game.html'),html);
 async function one(file,shot){
  const scen=require(path.resolve(file));
