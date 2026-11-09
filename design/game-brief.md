@@ -18,7 +18,7 @@
 Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estranhos jogando**:
 1. **Retenção (feito):** Passe de Temporada gratuito (28 dias, missões semanais, borda exclusiva), Relíquias Ancestrais (essência da ascensão), Chefe Mundial semanal (mascote exclusivo na faixa 10) e Evolução de mascotes (★1 a ★5). *(Adicione aqui outros recursos que ainda quiser.)*
 2. **Save seguro (feito):** na aba Perfil: exportar (copiar código ou baixar arquivo), importar (código ou arquivo, com verificação), restaurar backup e apagar progresso (digitando APAGAR). Backup automático 1x por dia e antes de importar, restaurar ou apagar; save corrompido é preservado em vez de apagado.
-3. **Primeiros 5 minutos guiados:** dicas curtas que apontam para a primeira melhoria, o primeiro item, o primeiro chefão e a primeira ascensão. Hoje existe só um banner inicial.
+3. **Primeiros 5 minutos guiados (feito):** faixa de dicas abaixo das abas, com brilho e 👆 no alvo, em 5 passos (melhoria, aba Itens, equipar, chefão, ascensão). Cada passo dá +15 💎 e pode ser pulado no ✕. Saves que já ascenderam não veem as dicas. Teste em `tests/headless/tutorial.js`.
 4. **Balanceamento da curva:** a 1ª ascensão deve sair em cerca de 30 a 60 minutos, sem parede de progresso nos primeiros 100 estágios.
 5. **Estabilidade no celular:** sem erros no console numa sessão de 30 min a ~390 px; FPS aceitável no modo "Leve"; carregamento rápido no 4G.
 6. **Publicação:** link público (por exemplo, GitHub Pages), número de versão visível e um canal para os testadores mandarem opinião e bugs.
@@ -33,7 +33,7 @@ Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estr
 1. ~~Recursos de retenção~~ feito (passe, relíquias, chefe mundial, evolução de mascotes).
 2. ~~Save seguro~~ feito.
 3. Balanceamento (1ª parte feita): XP mais lenta (`12×1,22^(nível−1)`) e aviso de ascensão só depois de 2 fugas seguidas do chefão. Medido em `tests/headless/balanceamento.js`. Falta: a parede perto do estágio 100 e a curva depois da 1ª ascensão.
-4. Primeiros 5 minutos guiados.
+4. ~~Primeiros 5 minutos guiados~~ feito.
 5. Teste de estabilidade no celular a 390 px e correções.
 6. Publicar a versão de teste, mostrar a versão no jogo e definir o canal de feedback.
 7. Rodada com 3 a 5 testadores, depois `/playtest-report` e ajustes.

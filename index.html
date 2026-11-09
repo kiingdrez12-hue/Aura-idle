@@ -273,6 +273,18 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .chestc .cr{font-size:10.5px;font-weight:700;opacity:.9;white-space:nowrap;min-height:13px}
 .chestc.out{opacity:0;transform:translateY(10px) scale(.9)}
 @keyframes cpop{from{opacity:0;transform:translateY(24px) scale(.3)}}
+/* === dicas guiadas (primeiros minutos) === */
+#tutBar{display:flex;align-items:center;gap:8px;margin:6px 6px 0;padding:7px 8px 7px 10px;border-radius:10px;background:linear-gradient(90deg,rgba(255,207,74,.18),rgba(255,207,74,.06));border:1px solid rgba(255,207,74,.45);box-shadow:0 0 14px -6px #ffcf4a;animation:tutIn .35s cubic-bezier(.2,1.5,.4,1)}
+#tutBar.hidden{display:none}
+#tutBar .tic{font-size:20px;line-height:1}
+#tutBar .ttx{flex:1;min-width:0;font-size:12px;line-height:1.25;color:#fff}
+#tutBar .ttx b{display:block;font-size:9px;letter-spacing:.12em;color:#ffcf4a}
+#tutX{border:0;background:rgba(255,255,255,.08);color:#ccd;border-radius:8px;width:26px;height:26px;font-size:12px;flex:0 0 auto}
+.tutHi{animation:tutPulse 1.1s ease-in-out infinite!important;outline:2px solid #ffcf4a!important;outline-offset:2px}
+#tutFinger{position:fixed;z-index:50;font-size:26px;pointer-events:none;filter:drop-shadow(0 2px 4px #000);animation:tutBob .8s ease-in-out infinite;display:none}
+@keyframes tutPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,207,74,.0)}50%{box-shadow:0 0 16px 4px rgba(255,207,74,.75)}}
+@keyframes tutBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,7px)}}
+@keyframes tutIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -297,6 +309,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
  </div>
  <div id="panel">
   <div class="tabs"><button class="tab on" data-t="up"><i class="ti">⚔️</i><span class="tl">Melhorar</span><span class="dot" id="dotUp"></span></button><button class="tab" data-t="inv"><i class="ti">🎒</i><span class="tl">Itens</span><span class="dot" id="dotInv"></span></button><button class="tab" data-t="pet"><i class="ti">🐾</i><span class="tl">Mascotes</span><span class="dot" id="dotPet"></span></button><button class="tab" data-t="jor"><i class="ti">🗺️</i><span class="tl">Jornada</span><span class="dot" id="dotJor"></span></button><button class="tab" data-t="tal"><i class="ti">🌳</i><span class="tl">Talentos</span><span class="dot" id="dotTal"></span></button><button class="tab" data-t="hero"><i class="ti">🧙</i><span class="tl">Herói</span><span class="dot" id="dotHero"></span></button><button class="tab" data-t="prof"><i class="ti">👤</i><span class="tl">Perfil</span><span class="dot" id="dotProf"></span></button><button class="tab" data-t="asc"><i class="ti">✨</i><span class="tl">Ascensão</span><span class="dot" id="dotAsc"></span></button></div>
+  <div id="tutBar" class="hidden"><span class="tic" id="tutIc"></span><div class="ttx"><b id="tutN"></b><span id="tutT"></span></div><button id="tutX" aria-label="Pular dicas">✕</button></div><div id="tutFinger">👆</div>
   <div class="pg" id="pgUp"><div class="qty"><span>Comprar</span><button class="qb on" data-q="1">x1</button><button class="qb" data-q="10">x10</button><button class="qb" data-q="max">MÁX</button></div><div id="rows"></div></div>
   <div class="pg hidden" id="pgInv">
    <div class="frag"><span>EQUIPADOS</span><span>✨ <b id="fragv">0</b> fragmentos</span></div>
@@ -382,9 +395,9 @@ const $=id=>document.getElementById(id);
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
 function fmt(n){if(!isFinite(n))return '∞';if(n<1000)return n<10&&n%1?n.toFixed(1):Math.floor(n)+'';const e=Math.floor(Math.log10(n)/3);let s;if(e<SUF.length)s=SUF[e];else{const k=e-SUF.length;s=String.fromCharCode(97+Math.floor(k/26)%26)+String.fromCharCode(97+k%26)}const v=n/Math.pow(1000,e);return(v<10?v.toFixed(2):v<100?v.toFixed(1):Math.floor(v))+s}
 // ===================== save =====================
-const DEF={skAuto:true,wb:null,ss:null,ess:0,rel:{},ascStart:1,tal:{},gems:0,eggs:[0,0,0],pets:{},petActive:null,towerBest:0,towerTries:3,ach:{},boostUntil:0,life:{buys:0,ups:0,specials:0,floors:0},gfx:1,uport:['p_knight'],ubord:['bd_none'],port:'p_knight',bord:'bd_none',name:'Herói',chestsN:0,playT:0,auraLv:1,uacc:['h_none','b_default'],head:'h_none',back:'b_default',iv:2,cls:'knight',skin:'padrao',ucls:['knight'],uskin:['padrao'],gold:0,lvl:1,xp:0,stage:1,maxStage:1,best:1,kills:0,up:{dmg:0,spd:0,crit:0,gold:0,aura:0,spirit:0,xp:0},autoSal:[false,false,false,false,false,false,false,false],souls:0,asc:0,total:0,last:0,autobuy:false,gps:0,tier:0,muted:false,bosses:0,killsAll:0,items:[],eq:{},frag:0,fk:0,nid:1,found:0};
+const DEF={tut:0,skAuto:true,wb:null,ss:null,ess:0,rel:{},ascStart:1,tal:{},gems:0,eggs:[0,0,0],pets:{},petActive:null,towerBest:0,towerTries:3,ach:{},boostUntil:0,life:{buys:0,ups:0,specials:0,floors:0},gfx:1,uport:['p_knight'],ubord:['bd_none'],port:'p_knight',bord:'bd_none',name:'Herói',chestsN:0,playT:0,auraLv:1,uacc:['h_none','b_default'],head:'h_none',back:'b_default',iv:2,cls:'knight',skin:'padrao',ucls:['knight'],uskin:['padrao'],gold:0,lvl:1,xp:0,stage:1,maxStage:1,best:1,kills:0,up:{dmg:0,spd:0,crit:0,gold:0,aura:0,spirit:0,xp:0},autoSal:[false,false,false,false,false,false,false,false],souls:0,asc:0,total:0,last:0,autobuy:false,gps:0,tier:0,muted:false,bosses:0,killsAll:0,items:[],eq:{},frag:0,fk:0,nid:1,found:0};
 let S=JSON.parse(JSON.stringify(DEF));
-try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d&&(typeof d!=='object'||typeof d.lvl!=='number'))throw new Error('save inválido');if(d){S=Object.assign(S,d);S.up=Object.assign({},DEF.up,d.up||{});S.items=d.items||[];S.eq=d.eq||{};if(!d.iv)S.iv=1;S.ucls=d.ucls||['knight'];S.uskin=d.uskin||['padrao'];S.uacc=d.uacc||['h_none','b_default'];S.uport=d.uport||['p_knight'];S.eggs=(d.eggs&&d.eggs.length===3)?d.eggs:[0,0,0];S.pets=d.pets||{};S.tal=d.tal||{};S.ach=d.ach||{};S.rel=d.rel||{};if(d.ess==null)S.ess=d.souls||0;S.life=Object.assign({buys:0,ups:0,specials:0,floors:0},d.life||{});S.ubord=d.ubord||['bd_none'];S.autoSal=(d.autoSal&&d.autoSal.length===8)?d.autoSal:DEF.autoSal.slice()}}catch(e){S=JSON.parse(JSON.stringify(DEF));try{const raw=localStorage.getItem('auraIdleSave1');if(raw)localStorage.setItem('auraIdleSave1_corrupt',raw)}catch(_){}setTimeout(()=>toast('Seu save não pôde ser lido. Use Restaurar backup no Perfil.'),4000)}
+try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d&&(typeof d!=='object'||typeof d.lvl!=='number'))throw new Error('save inválido');if(d){S=Object.assign(S,d);S.up=Object.assign({},DEF.up,d.up||{});S.items=d.items||[];S.eq=d.eq||{};if(!d.iv)S.iv=1;S.ucls=d.ucls||['knight'];S.uskin=d.uskin||['padrao'];S.uacc=d.uacc||['h_none','b_default'];S.uport=d.uport||['p_knight'];S.eggs=(d.eggs&&d.eggs.length===3)?d.eggs:[0,0,0];S.pets=d.pets||{};S.tal=d.tal||{};S.ach=d.ach||{};S.rel=d.rel||{};if(d.ess==null)S.ess=d.souls||0;S.life=Object.assign({buys:0,ups:0,specials:0,floors:0},d.life||{});S.ubord=d.ubord||['bd_none'];S.autoSal=(d.autoSal&&d.autoSal.length===8)?d.autoSal:DEF.autoSal.slice();if(d.tut==null)S.tut=(d.asc||0)>=1?99:0}}catch(e){S=JSON.parse(JSON.stringify(DEF));try{const raw=localStorage.getItem('auraIdleSave1');if(raw)localStorage.setItem('auraIdleSave1_corrupt',raw)}catch(_){}setTimeout(()=>toast('Seu save não pôde ser lido. Use Restaurar backup no Perfil.'),4000)}
 // ===================== itens =====================
 const RAR=[{n:'Comum',c:'#b8c0cc',m:1,mx:5,f:1,fc:1},{n:'Incomum',c:'#48f07a',m:1.4,mx:8,f:3,fc:2},{n:'Raro',c:'#3fb4ff',m:2,mx:10,f:8,fc:4},{n:'Épico',c:'#b45cff',m:2.8,mx:12,f:20,fc:8},{n:'Lendário',c:'#ff8a1f',m:3.9,mx:15,f:50,fc:16},{n:'Mítico',c:'#ff3b5c',m:5.3,mx:18,f:120,fc:32},{n:'Ancestral',c:'#2fe0c8',m:7.2,mx:22,f:300,fc:64},{n:'Celestial',c:'#fff3a0',m:9.6,mx:25,f:800,fc:128}];
 const SLOTS=[{k:'weapon',n:'Arma',ic:'⚔️',p:'dmg',nm:['Espada','Lâmina','Machado','Montante']},{k:'helm',n:'Elmo',ic:'🪖',p:'gold',nm:['Elmo','Capacete','Coroa']},{k:'armor',n:'Armadura',ic:'🛡️',p:'sp',nm:['Peitoral','Couraça','Armadura']},{k:'gloves',n:'Luvas',ic:'🧤',p:'spd',nm:['Luvas','Manoplas']},{k:'boots',n:'Botas',ic:'🥾',p:'cc',nm:['Botas','Grevas']},{k:'amulet',n:'Amuleto',ic:'📿',p:'spirit',nm:['Amuleto','Talismã','Pingente']},{k:'ring',n:'Anel',ic:'💍',p:'cd',nm:['Anel','Selo']}];
@@ -1705,7 +1718,34 @@ if(bossOn){sb.classList.add('boss');$('sfill').style.width=(bossT/bossMax()*100)
 let fpsN=0,fpsT=0,fpsChecked=false;
 let loopErr=0;
 function loop(now){try{loopBody(now)}catch(e){loopErr++;console.error(e);if(loopErr===1)toast('Erro: '+(e&&e.message||e));if(composer&&loopErr>2){composer=null}}requestAnimationFrame(loop)}
-function loopBody(now){let dt=(now-last)/1000;if(!fpsChecked){fpsN++;fpsT+=Math.min(dt,.2);if(fpsT>6){fpsChecked=true;if(fpsN/fpsT<28&&GFX()===1&&S.gfxAuto!==0){S.gfx=0;toast('Gráficos leves ativados para rodar melhor (mude na aba Herói)')}}}last=now;if(dt>.25){dt=.05}dt=Math.min(.05,dt);step(dt);render(dt);if(banT>0){banT-=dt;if(banT<=0){$('banner').classList.remove('show');banGap=.35}}else if(banGap>0){banGap-=dt;if(banGap<=0&&banQ.length){const q=banQ.shift();banner(q[0],q[1],q[2])}}
+// ===================== dicas guiadas (primeiros minutos) =====================
+// S.tut = passo atual (0..TUT_DONE-1), TUT_DONE = concluído, -1 = dicas desligadas.
+// Cada passo aparece quando show() é verdadeiro e termina sozinho quando done() é verdadeiro.
+const TUT_GEMS=15;
+const tutTab=k=>document.querySelector('.tab[data-t='+k+']');
+const anyEq=()=>Object.values(S.eq||{}).some(Boolean);
+const TUT=[
+ {ic:'⚔️',t:()=>S.gold>=costN(UP[0],S.up.dmg,1)?'Toque no botão dourado para afiar a Lâmina':'Junte ouro e toque no botão dourado para afiar a Lâmina',show:()=>true,done:()=>S.up.dmg>=1,tgt:()=>curTab!=='up'?tutTab('up'):rowEls.dmg.b},
+ {ic:'🎒',t:()=>'Caiu seu primeiro item! Abra a aba Itens',show:()=>S.items.length>0||anyEq(),done:()=>curTab==='inv'||anyEq(),tgt:()=>tutTab('inv')},
+ {ic:'⚡',t:()=>'Toque em ⚡ Equipar melhores para vestir o item',show:()=>true,done:anyEq,tgt:()=>curTab!=='inv'?tutTab('inv'):$('autoEq')},
+ {ic:'💀',t:()=>bossOn?'Derrote o chefão antes do tempo acabar! Se ele fugir, compre melhorias':'A cada 10 abates surge um chefão. Prepare-se!',show:()=>bossOn||S.kills>=7,done:()=>S.bosses>=1,tgt:()=>bossOn?$('bossl'):$('sbar')},
+ {ic:'✨',t:()=>'Ascensão liberada! Troque o progresso por Almas e fique mais forte para sempre',show:()=>soulGain()>0,done:()=>S.asc>=1,tgt:()=>curTab!=='asc'?tutTab('asc'):$('ascB')}];
+const TUT_DONE=TUT.length;
+let tutShown=-1,tutEl=null;
+function tutHi(el){if(tutEl===el)return;if(tutEl)tutEl.classList.remove('tutHi');tutEl=el;if(el)el.classList.add('tutHi')}
+function tutHide(){$('tutBar').classList.add('hidden');$('tutFinger').style.display='none';tutHi(null)}
+/** Avança e desenha as dicas guiadas; chamada pelo laço a cada quadro. */
+function tutTick(){if(S.tut<0||S.tut>=TUT_DONE){if(tutEl||tutShown>=0){tutHide();tutShown=-1}return}
+ let s=TUT[S.tut];
+ while(s&&s.done()){if(tutShown===S.tut){addGems(TUT_GEMS);SFX.lvl()}S.tut++;tutShown=-1;s=TUT[S.tut];
+  if(!s){tutHide();banner('JORNADA INICIADA!','Dicas concluídas · bom jogo!','#ffcf4a');save();return}}
+ if(tower.on||!s.show()){tutHide();return}
+ if(tutShown!==S.tut){tutShown=S.tut;$('tutBar').classList.remove('hidden');$('tutBar').style.animation='none';void $('tutBar').offsetWidth;$('tutBar').style.animation='';$('tutIc').textContent=s.ic;$('tutN').textContent='DICA '+(S.tut+1)+'/'+TUT_DONE}
+ const tx=s.t();if($('tutT').textContent!==tx)$('tutT').textContent=tx;
+ const el=s.tgt();tutHi(el);const f=$('tutFinger'),r=el&&el.getBoundingClientRect();
+ if(r&&r.width>0&&!el.closest('.hidden')){const up=el.classList.contains('tab');f.textContent=up?'👇':'👆';f.style.display='block';f.style.left=(r.left+r.width/2)+'px';f.style.top=(up?r.top-30:r.bottom-6)+'px'}else f.style.display='none'}
+$('tutX').onclick=()=>{S.tut=-1;tutHide();toast('Dicas desligadas');save()};
+function loopBody(now){let dt=(now-last)/1000;if(!fpsChecked){fpsN++;fpsT+=Math.min(dt,.2);if(fpsT>6){fpsChecked=true;if(fpsN/fpsT<28&&GFX()===1&&S.gfxAuto!==0){S.gfx=0;toast('Gráficos leves ativados para rodar melhor (mude na aba Herói)')}}}last=now;if(dt>.25){dt=.05}dt=Math.min(.05,dt);step(dt);render(dt);tutTick();if(banT>0){banT-=dt;if(banT<=0){$('banner').classList.remove('show');banGap=.35}}else if(banGap>0){banGap-=dt;if(banGap<=0&&banQ.length){const q=banQ.shift();banner(q[0],q[1],q[2])}}
 uiT+=dt;updHud();if(uiT>.2){uiT=0;updPanel();if(openIt){const c=upCost(openIt);$('iup').disabled=openIt.u>=RAR[openIt.r].mx||S.frag<c.f||S.gold<c.g}$('dotHero').classList.toggle('on',S.seenHero===0&&curTab!=='hero');$('dotTal').classList.toggle('on',curTab!=='tal'&&talPts()>talUsed());if(curTab==='tal'&&(tpT=(tpT||0)+1)%5===0)renderTalHd();if((jT=(jT||0)+1)%5===0){$('dotJor').classList.toggle('on',curTab!=='jor'&&jorReady());$('dotPet').classList.toggle('on',curTab!=='pet'&&S.eggs.some(x=>x>0));if(curTab==='jor')renderJornada();if(curTab==='pet'&&petDirty)renderPets()}$('dotProf').classList.toggle('on',S.seenProf===0&&curTab!=='prof');if(curTab==='prof'&&!$('pNameRow').querySelector('input')&&(profT=(profT||0)+1)%5===0)renderProfile();if(invDirty){if(curTab==='inv')renderInv();else{invDirty=false;$('dotInv').classList.toggle('on',S.items.some(i=>i.nw)||SLOTS.some(s=>betterFor(s.k)))}}if(!$('pgAsc').classList.contains('hidden'))updAsc();else $('dotAsc').classList.toggle('on',ascNudge()||relAff())}}
 // ===================== início =====================
 try{$('banner').parentNode.appendChild($('toast'))}catch(e){}try{setupComposer();migrateItems();if(!S.v7){S.v7=1;S.eggs[0]++}ensureDaily();calcIT();checkProfile(true);renderAvatar();buildHero()}catch(e){console.error(e);toast('Erro ao carregar: '+e.message)}rs();try{buildPet();updGems()}catch(e){console.error(e)}$('svExp').onclick=()=>{audioInit();openExport()};$('svImp').onclick=()=>{audioInit();openImport()};$('svDel').onclick=()=>{audioInit();openReset()};$('svRes').onclick=()=>{audioInit();openRestore()};$('svcl').onclick=()=>$('svmodal').classList.add('hidden');
