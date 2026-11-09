@@ -26,6 +26,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
 | baú (qualquer tier) | `pickups/chest-open` num cartão de notificação no canto inferior direito, com luz e madeira nas cores do tier (`chestPal`); o baú não cai mais no chão e a recompensa chega quando a tampa abre |
 | nova aura | `arcane/mana-burst` maior, nas cores da aura (sem coluna de luz) |
+| aura do herói (sempre ativa) | `tools/pixelfx/fx/aura.js`, efeito próprio com 10 estilos, um por tier, em volta do corpo (nada no chão); substitui o disco, as runas, o cilindro, a espiral, os anéis, a coroa e as asas 3D |
 
 No código (`index.html`): `pfx(id, x, y, z, opções)` cria um efeito na posição do mundo; `pfxUpd(dt)` roda dentro
 de `step` e `pfxDraw()` desenha uma vez por quadro, antes de renderizar. Cada efeito é desenhado num canvas e mostrado
@@ -41,7 +42,16 @@ porque custava 8 ms em média, com picos de 45 ms.
 
 ## Efeitos próprios
 
-`tools/pixelfx/fx/` guarda efeitos adaptados para o jogo, importados por `entry.js` como os do pixelfx. Hoje:
+`tools/pixelfx/fx/` guarda efeitos próprios do jogo, importados por `entry.js` como os do pixelfx. Hoje:
+
+- `aura.js`: a aura do herói. Usa a silhueta do boneco do pixelfx (`stockActor(2)`, a proporção do herói 3D) para
+  calcular a distância até o corpo, e cada estilo desenha no contorno: 0 Comum, contorno que respira; 1 Incomum, vento
+  e folhas; 2 Rara, faíscas elétricas; 3 Épica, chamas roxas; 4 Lendária, fogo e brasas; 5 Mítica, chamas de coração
+  escuro e fumaça; 6 Ancestral, espíritos com cauda; 7 Exaltada, cristais em órbita; 8 Divina, raios e auréola;
+  9 Primordial, fogo cósmico em arco-íris e estrelas. `drawBack` vai atrás do herói 3D e `draw` na frente; no jogo,
+  as duas camadas ficam sobre o raio da câmera que passa pelos pés (`auraDraw`). Redesenho a 20 qps (10 no Leve).
+  Nada é desenhado abaixo dos pés, e `tests/headless/auras.js` confere.
+
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
 para raridades altas), sem a coluna de luz.
 

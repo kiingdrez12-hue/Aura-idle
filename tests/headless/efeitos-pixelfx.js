@@ -33,6 +33,9 @@ module.exports={
   // baú: abre no cartão de notificação, fora da cena (não passa por pfx)
   clear();spawnChestType(2);for(let i=0;i<40;i++){step(.05);if(chestCur){chestCur.acc=1;chestDraw()}if(chestCur&&!seen.chestOpen){seen.chestOpen=1}
    const d=$('chestCv').getContext('2d').getImageData(0,0,96,72).data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.chestOpen=1;break}}
+  // aura do herói: efeito próprio fora do pfx, nas duas camadas
+  applyTier(3);for(let i=0;i<6;i++)step(.05);AURA.acc=1;auraDraw();seen.aura=1;
+  for(const q of AURA.parts){const d=q.img.data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.aura=1;break}}
   pfx=_pfx;
   return {all,seen,drew,naoCriados:all.filter(k=>!seen[k]),semPixels:all.filter(k=>!drew[k])}}),
  check:r=>{ok(r.naoCriados.length===0,'efeitos nunca criados: '+r.naoCriados.join(', '));ok(r.semPixels.length===0,'efeitos sem pixels visiveis: '+r.semPixels.join(', '))}};

@@ -765,6 +765,8 @@ function applyTier(i){tierIdx=i;const T=TIERS[i];C0.set(T.c[0]);C1.set(T.c[1]);C
 [glowDisc,rOut,rBig].forEach(m=>m.material.color.copy(C1));rIn.material.color.copy(C0);cylU.col.value.copy(C1);hxU.col.value.copy(C1);emi.color.copy(C0);gemH.material.color.copy(C1);pL.color.copy(C1);crown.material.color.copy(C0);crownH.material.color.copy(C1);
 arc.material.color.copy(C1);shocks[0].material.color.copy(C1);shocks[1].material.color.copy(C0);spirits.forEach(s=>{s.children[0].material.color.copy(C0);s.children[1].material.color.copy(C1)});projMat.color.copy(C1);
 activeAN=Math.floor(Math.min(AN,70+i*16)*AL().p);hel.visible=i>=2&&AL().hel;rBig.visible=i>=4;crown.visible=crownH.visible=i>=5;wings.forEach(w=>w.visible=i>=6);wingMat.color.copy(C1);vRings.forEach(r=>r.visible=i>=7);vMat.color.copy(C0);cylU.pw.value=(.7+i*.12)*AL().cyl;const s=1+i*.06;rOut.scale.setScalar(s);rIn.scale.setScalar(s);glowDisc.scale.setScalar(1+i*.1);
+// com o pixelfx, a aura é o efeito próprio em volta do corpo (auraSet) e as peças 3D do chão e do tubo saem
+if(pfxOK()){[glowDisc,rOut,rIn,rBig,cyl,hel,crown,crownH,...vRings,...wings].forEach(o=>o.visible=false);auraSet(i)}
 $('tier').textContent='AURA '+T.n.toUpperCase()}
 // ===================== partículas =====================
 const BN=700,bg=new THREE.BufferGeometry(),bpos=new Float32Array(BN*3),bcol=new Float32Array(BN*3),BP=[];
@@ -923,6 +925,28 @@ const NO_ACTOR={mask:{w:0,h:0,data:new Uint8Array(0)},x:0,y:0,w:0,h:0,head:[0,-3
 // o pixelfx usa uma figura de 38 px; com esta escala ela fica do tamanho do herói
 const PFX_BODY=1.3;
 const pfxOK=()=>!!window.PixelFX;
+// ===================== aura do herói (efeito próprio, tools/pixelfx/fx/aura.js) =====================
+// Um estilo por tier, desenhado em volta do corpo, nunca no chão. Duas camadas: a de trás fica um pouco atrás do herói
+// e a da frente um pouco à frente, as duas sobre o raio da câmera que passa pelos pés, para o desenho ficar alinhado
+// ao herói enquanto o próprio herói 3D cobre o meio da camada de trás.
+const AURA={fx:null,parts:[],acc:1,tier:-1},AURA_HZ=20,AURA_HZ_LITE=10,AURA_BACK=.15,AURA_FRONT=.35;
+function auraPart(w,h,ox,oy,order){const P=window.PixelFX,cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
+ const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
+ const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:true}),spr=new THREE.Sprite(mat);spr.center.set(ox/w,1-oy/h);spr.renderOrder=order;spr.visible=false;sc.add(spr);
+ return{cx,tex,mat,spr,fr:P.createFrame(w,h),img:cx.createImageData(w,h)}}
+function auraSet(i){const P=window.PixelFX;if(!P||!P.FX.aura)return;const m=P.FX.aura,[w,h]=m.meta.size,[ox,oy]=m.meta.origin;
+ if(!AURA.parts.length)AURA.parts=[auraPart(w,h,ox,oy,4),auraPart(w,h,ox,oy,21)];
+ const [L,M,Dk]=TIERS[i].c.map(c=>new THREE.Color(c)),K=new THREE.Color(0x06050a),hx=c=>'#'+c.getHexString();
+ const pal=[K.clone().lerp(Dk,.35),K.clone().lerp(Dk,.75),Dk.clone(),Dk.clone().lerp(M,.5),M.clone(),M.clone().lerp(L,.5),L.clone(),new THREE.Color(1,1,1)].map(hx);
+ AURA.fx=P.createFx(m,{x:ox,y:oy,seed:7,style:i,palette:pal,actor:NO_ACTOR});AURA.tier=i;AURA.acc=1}
+function auraUpd(dt){if(AURA.fx){AURA.fx.update(dt);AURA.acc+=dt}}
+function auraDraw(){if(!AURA.fx)return;const P=window.PixelFX,[b,f]=AURA.parts,hp=hero.position;
+ const r=tmp.copy(hp).sub(cam.position),dist=r.length();r.divideScalar(dist);const rh=Math.hypot(r.x,r.z)||1,[w,h]=P.FX.aura.meta.size;
+ // tamanho e força pela intensidade escolhida na aba Herói (Suave, Média, Intensa)
+ const lv=S.auraLv??1,k=PFX_BODY/PFX_PPU*[.92,1,1.08][lv],op=[.6,.85,1][lv];
+ for(const [q,s] of [[b,AURA_BACK],[f,-AURA_FRONT]]){const tt=s/rh,sc2=(dist+tt)/dist;q.spr.position.set(hp.x+r.x*tt,hp.y+r.y*tt+.02,hp.z+r.z*tt);q.spr.scale.set(w*k*sc2,h*k*sc2,1);q.mat.opacity=op}
+ if(AURA.acc<1/(GFX()===0?AURA_HZ_LITE:AURA_HZ))return;AURA.acc=0;
+ for(const [q,layer] of [[b,'back'],[f,'front']]){P.clearFrame(q.fr);AURA.fx.draw(q.fr,layer);P.composite(q.fr,q.img.data,null);q.cx.putImageData(q.img,0,0);q.tex.needsUpdate=true;q.spr.visible=true}}
 function pfxKill(e){sc.remove(e.spr);const q=PFX_POOL[e.R.key]||(PFX_POOL[e.R.key]=[]);if(q.length<PFX_POOL_MAX)q.push(e.R);else{e.tex.dispose();e.mat.dispose()}}
 function pfxUpd(dt){if(!window.PixelFX)return;
 for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}
@@ -1301,7 +1325,7 @@ function renderTalPg(){renderTal();renderTalHd();const D=['DOM','SEG','TER','QUA
 // ===================== loop =====================
 let t=0,last=performance.now(),uiT=0,saveT=0,abT=0,secT=0;
 const tmp=new THREE.Vector3(),camT=new THREE.Vector3(),lookT=new THREE.Vector3();
-function step(dt){t+=dt;pfxUpd(dt);if(!tower.on)updChest(dt);
+function step(dt){t+=dt;pfxUpd(dt);auraUpd(dt);if(!tower.on)updChest(dt);
 // spawn
 if(tower.on){if(tower.wb)updWB(dt);else updTower(dt)}else{
 const alive=enemies.filter(e=>!e.dead&&!e.boss).length,want=Math.min(8,4+Math.floor(S.stage/6));
@@ -1382,7 +1406,7 @@ lookT.lerp(zoomCam?tmp.set(hero.position.x,1.2,hero.position.z):tmp.set(hero.pos
 moon.position.set(hero.position.x-6,12,hero.position.z+6);moon.target.position.copy(hero.position);
 const r=rd.domElement.getBoundingClientRect();
 for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.l+=dt;n.p.y+=dt*n.vy;n.vy*=.96;tmp.copy(n.p).project(cam);const sc2=n.l<.12?.6+n.l/.12*.6:1.2-Math.min(.2,(n.l-.12));n.el.style.transform=`translate(${(tmp.x+1)/2*r.width}px,${(1-tmp.y)/2*r.height}px) translate(-50%,-50%) scale(${sc2})`;{const sy=(1-tmp.y)/2*r.height,hf=Math.max(0,Math.min(1,(sy-HUDB)/28));n.el.style.opacity=(n.l>.7?1-(n.l-.7)/.4:1)*hf}if(n.l>1.1){n.el.remove();nums.splice(i,1)}}
-pfxDraw();chestDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
+auraDraw();pfxDraw();chestDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
 function updHud(){$('goldv').textContent=fmt(S.gold);$('gps').textContent='+'+fmt(S.gps)+'/s'+(furyT>0?'  ·  FÚRIA x2':'')+(Date.now()<(S.boostUntil||0)?'  ·  OURO x2 '+Math.ceil((S.boostUntil-Date.now())/60000)+'min':'');$('lvl').textContent='Nv '+S.lvl;$('xp').style.width=(S.xp/xpNeed(S.lvl)*100)+'%';
 const sb=$('sbar');if(tower.on&&tower.wb){const B=wbBoss();$('stg').textContent='CHEFE MUNDIAL';$('world').textContent=B.n;sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/WB_T*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=B.ic+' DANO '+fmt(tower.run||0)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else if(tower.on){$('stg').textContent='TORRE · ANDAR '+tower.f;$('world').textContent='Torre de Desafio';sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/40*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=(tower.boss?'GUARDIÃO':'ABATES '+Math.min(tower.kills,tower.need)+'/'+tower.need)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else{$('world').textContent=$('world').textContent==='Torre de Desafio'?WORLDS[worldOf(S.stage)].n:$('world').textContent;
 $('stg').textContent='ESTÁGIO '+S.stage+(S.stage%10===0?' 💀':'');
