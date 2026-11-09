@@ -235,6 +235,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .goldbox{max-width:52vw}.xpb{width:66px!important}
 .bossl{background:rgba(20,4,8,.6);display:inline-block;padding:2px 7px;border-radius:6px}
 @media (orientation:landscape) and (min-width:720px){.goldbox{max-width:none}}
+
+.slot .setb{position:absolute;left:2px;top:2px;font-size:9px;line-height:1;padding:2px;border-radius:5px;box-shadow:0 0 6px rgba(0,0,0,.6)}
+.setbox{display:block!important;margin-top:8px;padding:8px 10px;border:1px solid;border-radius:10px;background:rgba(255,255,255,.03);font-size:12px;opacity:1!important}
+.setbox>div{display:block!important;opacity:.55;margin:2px 0}.setbox>div.on{opacity:1;font-weight:800}.setbox .sh{opacity:1!important;font-weight:900;margin-bottom:4px}
+.setbox small{opacity:.5;font-size:10px}
 </style>
 </head>
 <body>
@@ -338,20 +343,23 @@ try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d){S=Ob
 const RAR=[{n:'Comum',c:'#b8c0cc',m:1,mx:5,f:1,fc:1},{n:'Incomum',c:'#48f07a',m:1.4,mx:8,f:3,fc:2},{n:'Raro',c:'#3fb4ff',m:2,mx:10,f:8,fc:4},{n:'Épico',c:'#b45cff',m:2.8,mx:12,f:20,fc:8},{n:'Lendário',c:'#ff8a1f',m:3.9,mx:15,f:50,fc:16},{n:'Mítico',c:'#ff3b5c',m:5.3,mx:18,f:120,fc:32},{n:'Ancestral',c:'#2fe0c8',m:7.2,mx:22,f:300,fc:64},{n:'Celestial',c:'#fff3a0',m:9.6,mx:25,f:800,fc:128}];
 const SLOTS=[{k:'weapon',n:'Arma',ic:'⚔️',p:'dmg',nm:['Espada','Lâmina','Machado','Montante']},{k:'helm',n:'Elmo',ic:'🪖',p:'gold',nm:['Elmo','Capacete','Coroa']},{k:'armor',n:'Armadura',ic:'🛡️',p:'sp',nm:['Peitoral','Couraça','Armadura']},{k:'gloves',n:'Luvas',ic:'🧤',p:'spd',nm:['Luvas','Manoplas']},{k:'boots',n:'Botas',ic:'🥾',p:'cc',nm:['Botas','Grevas']},{k:'amulet',n:'Amuleto',ic:'📿',p:'spirit',nm:['Amuleto','Talismã','Pingente']},{k:'ring',n:'Anel',ic:'💍',p:'cd',nm:['Anel','Selo']}];
 const SUFX=['de Ferro','do Viajante','do Guardião','do Dragão','dos Deuses','do Abismo Eterno','dos Ancestrais','Celestial'];
+const SETS=[{n:'Fúria Rubra',sf:'da Fúria Rubra',ic:'🔥',c:'#ff5a3a',b:[[2,{dmg:30}],[4,{cc:4,cd:40}],[6,{dmg:110}]]},{n:'Tesouro de Midas',sf:'de Midas',ic:'👑',c:'#ffd24a',b:[[2,{gold:35}],[4,{xp:40}],[6,{gold:120,xp:40}]]},{n:'Tempestade Arcana',sf:'da Tempestade',ic:'⚡',c:'#8a7aff',b:[[2,{sp:45}],[4,{spd:8}],[6,{sp:140}]]},{n:'Véu Espectral',sf:'do Véu Espectral',ic:'👻',c:'#5af0d0',b:[[2,{spirit:45}],[4,{cd:50}],[6,{spirit:140}]]}];
+function setState(){const o=SETS.map(()=>({n:0,rs:0}));SLOTS.forEach(sl=>{const it=eqItem(sl.k);if(it&&it.set!=null&&o[it.set]){o[it.set].n++;o[it.set].rs+=RAR[it.r].m}});o.forEach(x=>x.sc=x.n?Math.max(1,x.rs/x.n/2.8):1);return o}
+const setDesc=b=>Object.entries(b).map(([k,v])=>`${STL[k]} +${k==='cc'||k==='spd'?v:fmt(v)}%`).join(' · ');
 const STL={dmg:'Dano',gold:'Ouro',sp:'Dano do especial',spirit:'Dano dos espíritos',spd:'Velocidade de ataque',cc:'Chance de crítico',cd:'Dano crítico',xp:'Experiência'};
 const SW={dmg:1,gold:.6,sp:.45,spirit:.45,spd:3.5,cc:8,cd:.5,xp:.5};
 function statVal(k,m,il){const f=.85+Math.random()*.3;return f*({dmg:4*m*(1+il*.04),gold:3*m*(1+il*.03),sp:6*m*(1+il*.04),spirit:6*m*(1+il*.04),cd:8*m*(1+il*.02),spd:1.1*m,cc:.45*m,xp:5*m*(1+il*.02)})[k]}
-function makeItem(r,il){const sl=SLOTS[Math.random()*7|0],R=RAR[r],st={};st[sl.p]=statVal(sl.p,R.m,il);const pool=Object.keys(STL).filter(k=>k!==sl.p).sort(()=>Math.random()-.5);for(let i=0;i<Math.min(r,pool.length);i++)st[pool[i]]=statVal(pool[i],R.m,il)*.35;return{id:S.nid++,s:sl.k,r,il,u:0,st,nm:sl.nm[Math.random()*sl.nm.length|0]+' '+SUFX[r],nw:1}}
+function makeItem(r,il){const sl=SLOTS[Math.random()*7|0],R=RAR[r],st={};st[sl.p]=statVal(sl.p,R.m,il);const pool=Object.keys(STL).filter(k=>k!==sl.p).sort(()=>Math.random()-.5);for(let i=0;i<Math.min(r,pool.length);i++)st[pool[i]]=statVal(pool[i],R.m,il)*.35;const it={id:S.nid++,s:sl.k,r,il,u:0,st,nm:sl.nm[Math.random()*sl.nm.length|0]+' '+SUFX[r],nw:1};if(r>=3&&Math.random()<.22){it.set=Math.random()*SETS.length|0;it.nm=sl.nm[Math.random()*sl.nm.length|0]+' '+SETS[it.set].sf}return it}
 const slotOf=k=>SLOTS.find(s=>s.k===k);
 const itemMul=it=>1+.08*it.u;
-const itemScore=it=>it?Object.entries(it.st).reduce((a,[k,v])=>a+v*SW[k],0)*itemMul(it):0;
+const itemScore=it=>it?Object.entries(it.st).reduce((a,[k,v])=>a+v*SW[k],0)*itemMul(it)*(it.set!=null?1.12:1):0;
 const fragOf=it=>Math.ceil(RAR[it.r].f*(1+it.u*.5));
 const fmtS=(k,v)=>(k==='cc'||k==='spd'?v.toFixed(1):fmt(v))+'%';
 const isEq=it=>S.eq[it.s]===it.id;
 const isBetter=it=>!isEq(it)&&itemScore(it)>itemScore(eqItem(it.s))*1.001;
 const eqItem=k=>S.items.find(i=>i.id===S.eq[k]);
 let IT={dmg:0,gold:0,sp:0,spirit:0,spd:0,cc:0,cd:0,xp:0};
-function calcIT(){IT={dmg:0,gold:0,sp:0,spirit:0,spd:0,cc:0,cd:0,xp:0};SLOTS.forEach(sl=>{const it=eqItem(sl.k);if(!it)return;for(const k in it.st)IT[k]+=it.st[k]*itemMul(it)});if(typeof petIT==='function'&&typeof PETS!=='undefined')petIT();if(typeof TAL!=='undefined')talIT()}
+function calcIT(){IT={dmg:0,gold:0,sp:0,spirit:0,spd:0,cc:0,cd:0,xp:0};SLOTS.forEach(sl=>{const it=eqItem(sl.k);if(!it)return;for(const k in it.st)IT[k]+=it.st[k]*itemMul(it)});setState().forEach((x,i)=>SETS[i].b.forEach(([need,b])=>{if(x.n>=need)for(const k in b)IT[k]+=b[k]*(k==='cc'||k==='spd'?1:x.sc)}));if(typeof petIT==='function'&&typeof PETS!=='undefined')petIT();if(typeof TAL!=='undefined')talIT()}
 function migrateItems(){if(S.iv===2)return;S.items.forEach(it=>{const sl=slotOf(it.s),R=RAR[it.r],keys=Object.keys(it.st);const st={};st[sl.p]=statVal(sl.p,R.m,it.il);keys.filter(k=>k!==sl.p).forEach(k=>st[k]=statVal(k,R.m,it.il)*.35);it.st=st});S.iv=2}
 function rollR(w){const sum=w.reduce((a,b)=>a+b,0);let x=Math.random()*sum;for(let i=0;i<w.length;i++){x-=w[i];if(x<=0)return i}return 0}
 const DROPW={mob:[70,22,6,1.6,.35,.04,.008,.001],elite:[28,36,22,10,3,.8,.15,.03],boss:[0,30,34,22,10,3,.8,.15]};
@@ -912,16 +920,17 @@ const grid=(id,list,unl,cur,mk,set)=>{const g=$(id);g.innerHTML='';list.forEach(
 grid('portg',PORTS,S.uport,S.port,x=>pfHTML(x.k,S.bord,50),k=>S.port=k);grid('bordg',BORDS,S.ubord,S.bord,x=>pfHTML(S.port,x.k,50),k=>S.bord=k)}
 // ===================== inventário =====================
 const betterFor=k=>{const cur=itemScore(eqItem(k));return S.items.some(i=>i.s===k&&!isEq(i)&&itemScore(i)>cur*1.001)};
-function itemBtn(it){const R=RAR[it.r],b=document.createElement('button');b.className='slot';b.style.borderColor=R.c;b.style.boxShadow=`inset 0 0 12px ${R.c}55`;b.innerHTML=slotOf(it.s).ic+(it.u?`<span class="u">+${it.u}</span>`:'')+(it.nw?'<span class="nw"></span>':'');if(isBetter(it))b.classList.add('better');b.onclick=()=>openItem(it);return b}
+function itemBtn(it){const R=RAR[it.r],b=document.createElement('button');b.className='slot';b.style.borderColor=R.c;b.style.boxShadow=`inset 0 0 12px ${R.c}55`;b.innerHTML=slotOf(it.s).ic+(it.u?`<span class="u">+${it.u}</span>`:'')+(it.nw?'<span class="nw"></span>':'')+(it.set!=null?`<span class="setb" style="background:${SETS[it.set].c}">${SETS[it.set].ic}</span>`:'');if(isBetter(it))b.classList.add('better');b.onclick=()=>openItem(it);return b}
 function renderInv(){invDirty=false;renderAsal();$('fragv').textContent=fmt(S.frag);const eqg=$('eqg');eqg.innerHTML='';
 SLOTS.forEach(sl=>{const it=eqItem(sl.k);let b;if(it)b=itemBtn(it);else{b=document.createElement('button');b.className='slot empty';b.textContent=sl.ic;b.onclick=()=>toast(sl.n+': nenhum item equipado')}if(betterFor(sl.k))b.classList.add('better');eqg.appendChild(b)});
-const bon=Object.entries(IT).filter(([k,v])=>v>0).map(([k,v])=>`${STL[k]} <b>+${fmtS(k,v)}</b>`);$('bonus').innerHTML=bon.length?'Bônus dos itens: '+bon.join(' · '):'Derrote monstros e abra baús para encontrar itens. Equipados, eles dão bônus permanentes.';
+const bon=Object.entries(IT).filter(([k,v])=>v>0).map(([k,v])=>`${STL[k]} <b>+${fmtS(k,v)}</b>`);const sst=setState().map((x,i)=>x.n?`<span style="color:${SETS[i].c}">${SETS[i].ic} ${SETS[i].n} ${x.n}/7</span>`:'').filter(Boolean);$('bonus').innerHTML=bon.length?'Bônus dos itens: '+bon.join(' · ')+(sst.length?'<br>Conjuntos: '+sst.join(' · '):''):'Derrote monstros e abra baús para encontrar itens. Equipados, eles dão bônus permanentes.';
 const bag=$('bag');bag.innerHTML='';const list=S.items.filter(i=>!isEq(i)).sort((a,b)=>b.r-a.r||itemScore(b)-itemScore(a));list.forEach(it=>bag.appendChild(itemBtn(it)));if(!list.length)bag.innerHTML='<div class="empty-bag">Mochila vazia</div>';
 $('bagl').textContent=`MOCHILA ${list.length}/${60-SLOTS.filter(s=>eqItem(s.k)).length}`;$('dotInv').classList.toggle('on',curTab!=='inv'&&(S.items.some(i=>i.nw)||SLOTS.some(s=>betterFor(s.k))))}
 let openIt=null;
+function setBlock(it){if(it.set==null)return'';const T=SETS[it.set],st=setState()[it.set];return `<div class="setbox" style="border-color:${T.c}"><div class="sh" style="color:${T.c}">${T.ic} Conjunto ${T.n} · ${Math.min(st.n,7)}/7 equipados</div>`+T.b.map(([n,b])=>`<div class="${st.n>=n?'on':''}" style="${st.n>=n?'color:'+T.c:''}">(${n}) ${setDesc(b)}</div>`).join('')+'<small>Bônus crescem com a raridade das peças equipadas</small></div>'}
 function upCost(it){return{f:(it.u+1)*RAR[it.r].fc,g:goldBase(Math.max(S.stage,5))*12*Math.pow(1.45,it.u)}}
 function openItem(it){openIt=it;it.nw=0;const R=RAR[it.r],sl=slotOf(it.s);$('iic').textContent=sl.ic;$('inm').textContent=it.nm+(it.u?' +'+it.u:'');$('inm').style.color=R.c;$('irr').innerHTML=`<span style="color:${R.c}">${R.n.toUpperCase()}</span> · ${sl.n} · nível do item ${it.il}`;
-$('ist').innerHTML=Object.entries(it.st).map(([k,v],i)=>`<div class="${i?'':'p'}"><span>${STL[k]}</span><span style="color:${i?'#cfe':R.c}">+${fmtS(k,v*itemMul(it))}</span></div>`).join('')+`<div style="opacity:.6;font-size:11px"><span>Melhoria</span><span>+${it.u} / ${R.mx}</span></div>`;
+$('ist').innerHTML=Object.entries(it.st).map(([k,v],i)=>`<div class="${i?'':'p'}"><span>${STL[k]}</span><span style="color:${i?'#cfe':R.c}">+${fmtS(k,v*itemMul(it))}</span></div>`).join('')+`<div style="opacity:.6;font-size:11px"><span>Melhoria</span><span>+${it.u} / ${R.mx}</span></div>`+setBlock(it);
 const cur=eqItem(it.s),eq=isEq(it);if(!eq&&cur){const p=(itemScore(it)/itemScore(cur)-1)*100;$('icmp').innerHTML=`<span style="color:${p>=0?'#5aff8a':'#ff6a7a'}">${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(0)}% de poder vs equipado</span>`}else $('icmp').innerHTML=eq?'<span style="color:#9fe8ff">✔ Equipado</span>':'<span style="color:#5aff8a">▲ Espaço vazio — equipe!</span>';
 const c=upCost(it),mx=it.u>=R.mx;const ub=$('iup');ub.disabled=mx||S.frag<c.f||S.gold<c.g;ub.innerHTML=mx?'Melhoria máxima':`Melhorar +${it.u+1}<br><small>✨${fmt(c.f)} · 🪙${fmt(c.g)}</small>`;
 $('ieq').classList.toggle('hidden',eq);const sb=$('isal');sb.disabled=eq;sb.innerHTML=`Desmanchar<br><small>+${fragOf(it)} ✨</small>`;$('imodal').classList.remove('hidden');invDirty=true}
