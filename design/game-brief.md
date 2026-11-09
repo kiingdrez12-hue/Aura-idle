@@ -32,7 +32,7 @@ Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estr
 ## Ordem de construção
 1. ~~Recursos de retenção~~ feito (passe, relíquias, chefe mundial, evolução de mascotes).
 2. ~~Save seguro~~ feito.
-3. Balanceamento: simular a curva com `step(dt)` no teste headless e ajustar custos e recompensas.
+3. Balanceamento (1ª parte feita): XP mais lenta (`12×1,22^(nível−1)`) e aviso de ascensão só depois de 2 fugas seguidas do chefão. Medido em `tests/headless/balanceamento.js`. Falta: a parede perto do estágio 100 e a curva depois da 1ª ascensão.
 4. Primeiros 5 minutos guiados.
 5. Teste de estabilidade no celular a 390 px e correções.
 6. Publicar a versão de teste, mostrar a versão no jogo e definir o canal de feedback.
