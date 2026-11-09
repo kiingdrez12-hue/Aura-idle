@@ -17,7 +17,7 @@
 ## MVP para outras pessoas jogarem (versão de teste)
 Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estranhos jogando**:
 1. **Retenção (feito):** Passe de Temporada gratuito (28 dias, missões semanais, borda exclusiva), Relíquias Ancestrais (essência da ascensão), Chefe Mundial semanal (mascote exclusivo na faixa 10) e Evolução de mascotes (★1 a ★5). *(Adicione aqui outros recursos que ainda quiser.)*
-2. **Save seguro:** exportar e importar o save como texto, e um botão de apagar progresso com confirmação. Hoje o save existe só no `localStorage` (salva a cada 5 s e ao sair da aba); se o navegador limpar os dados, o progresso se perde.
+2. **Save seguro (feito):** na aba Perfil: exportar (copiar código ou baixar arquivo), importar (código ou arquivo, com verificação), restaurar backup e apagar progresso (digitando APAGAR). Backup automático 1x por dia e antes de importar, restaurar ou apagar; save corrompido é preservado em vez de apagado.
 3. **Primeiros 5 minutos guiados:** dicas curtas que apontam para a primeira melhoria, o primeiro item, o primeiro chefão e a primeira ascensão. Hoje existe só um banner inicial.
 4. **Balanceamento da curva:** a 1ª ascensão deve sair em cerca de 30 a 60 minutos, sem parede de progresso nos primeiros 100 estágios.
 5. **Estabilidade no celular:** sem erros no console numa sessão de 30 min a ~390 px; FPS aceitável no modo "Leve"; carregamento rápido no 4G.
@@ -31,7 +31,7 @@ Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estr
 
 ## Ordem de construção
 1. ~~Recursos de retenção~~ feito (passe, relíquias, chefe mundial, evolução de mascotes).
-2. Save seguro: exportar, importar e apagar. É o que protege os testadores.
+2. ~~Save seguro~~ feito.
 3. Balanceamento: simular a curva com `step(dt)` no teste headless e ajustar custos e recompensas.
 4. Primeiros 5 minutos guiados.
 5. Teste de estabilidade no celular a 390 px e correções.

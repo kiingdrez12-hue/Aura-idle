@@ -119,6 +119,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .ibtns button{flex:1 1 30%;padding:11px 6px;border-radius:10px;border:0;font-weight:900;font-size:12.5px;font-family:inherit;line-height:1.25}
 .ib1{background:linear-gradient(180deg,#ffd966,#f0a81a);color:#2a1800}.ib2{background:#2c6bff;color:#fff}.ib3{background:#3a2030;color:#ff9aa8}
 .ibtns button:disabled{opacity:.38}
+#svtx{width:100%;margin-top:6px;background:#0b0e18;color:#dfe6ff;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px;font:11px/1.35 ui-monospace,Menlo,monospace;resize:none;word-break:break-all;user-select:text;-webkit-user-select:text}
+.svb{margin-top:0;margin-bottom:6px}.svb button{flex:1 1 45%}.svg{background:#2a3048!important;color:#cfd8ff!important}.svl{font-size:11px;opacity:.6;text-align:center;margin-top:2px}
 .cl{margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#ccd;font-family:inherit;font-size:13px}
 .tab{font-size:10.5px;letter-spacing:0;padding:9px 0}
 .tabs{gap:4px!important;padding:8px 8px 0!important}
@@ -317,6 +319,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
    <div class="sl">ESTATÍSTICAS</div><div class="stats2" id="pStats"></div>
    <div class="sl">RETRATOS</div><div class="pgrid" id="portg"></div>
    <div class="sl">BORDAS</div><div class="pgrid" id="bordg"></div>
+   <div class="sl" style="margin-top:12px">SEU PROGRESSO</div><div class="ibtns svb"><button class="ib1" id="svExp">📤 Exportar</button><button class="ib2" id="svImp">📥 Importar</button></div><div class="ibtns svb"><button class="ib2 svg" id="svRes">↩️ Restaurar backup</button><button class="ib3" id="svDel">🗑️ Apagar progresso</button></div><div class="svl" id="bakl"></div>
   </div>
   <div class="pg hidden" id="pgAsc">
    <div class="asc">
@@ -336,6 +339,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
   </div>
  </div>
 </div>
+<div class="modal hidden" id="svmodal"><div class="card"><h3 class="cz" id="svh"></h3><p id="svp" style="font-size:13px;line-height:1.45;opacity:.9"></p><textarea id="svtx" spellcheck="false" autocomplete="off"></textarea><div id="svi" style="font-size:12px;line-height:1.4;margin-top:6px"></div><div class="ibtns"><button id="svb1"></button><button id="svb2"></button></div><button class="cl" id="svcl">Fechar</button></div></div>
 <div class="modal hidden" id="modal"><div class="card"><h3 class="cz" id="mh"></h3><p id="mp"></p><div class="big" id="mbig"></div><button class="bigb" id="mb" style="background:linear-gradient(180deg,#ffd966,#f0a81a);color:#2a1800">Coletar</button></div></div>
 <div class="modal hidden" id="imodal"><div class="card"><div style="font-size:42px;line-height:1" id="iic"></div><h3 class="cz" id="inm" style="margin-top:8px"></h3><div id="irr" style="font-size:12px;font-weight:800;letter-spacing:.04em"></div><div class="ist" id="ist"></div><div class="cmp" id="icmp"></div><div class="ibtns"><button class="ib1" id="iup"></button><button class="ib2" id="ieq">Equipar</button><button class="ib3" id="isal"></button></div><button class="cl" id="icl">Fechar</button></div></div>
 <div class="modal hidden" id="hmodal"><div class="card"><div id="hmIc"></div><h3 class="cz" id="hmN"></h3><div id="hmR" style="font-size:12px;font-weight:800;margin-bottom:6px"></div><div class="ist" id="hmS"></div><div class="ibtns"><button class="ib2" id="hmEq">Levar comigo</button><button class="ib1" id="hmOk">Incrível!</button></div></div></div>
@@ -356,7 +360,7 @@ function fmt(n){if(!isFinite(n))return '∞';if(n<1000)return n<10&&n%1?n.toFixe
 // ===================== save =====================
 const DEF={wb:null,ss:null,ess:0,rel:{},ascStart:1,tal:{},gems:0,eggs:[0,0,0],pets:{},petActive:null,towerBest:0,towerTries:3,ach:{},boostUntil:0,life:{buys:0,ups:0,specials:0,floors:0},gfx:1,uport:['p_knight'],ubord:['bd_none'],port:'p_knight',bord:'bd_none',name:'Herói',chestsN:0,playT:0,auraLv:1,uacc:['h_none','b_default'],head:'h_none',back:'b_default',iv:2,cls:'knight',skin:'padrao',ucls:['knight'],uskin:['padrao'],gold:0,lvl:1,xp:0,stage:1,maxStage:1,best:1,kills:0,up:{dmg:0,spd:0,crit:0,gold:0,aura:0,spirit:0,xp:0},autoSal:[false,false,false,false,false,false,false,false],souls:0,asc:0,total:0,last:0,autobuy:false,gps:0,tier:0,muted:false,bosses:0,killsAll:0,items:[],eq:{},frag:0,fk:0,nid:1,found:0};
 let S=JSON.parse(JSON.stringify(DEF));
-try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d){S=Object.assign(S,d);S.up=Object.assign({},DEF.up,d.up||{});S.items=d.items||[];S.eq=d.eq||{};if(!d.iv)S.iv=1;S.ucls=d.ucls||['knight'];S.uskin=d.uskin||['padrao'];S.uacc=d.uacc||['h_none','b_default'];S.uport=d.uport||['p_knight'];S.eggs=(d.eggs&&d.eggs.length===3)?d.eggs:[0,0,0];S.pets=d.pets||{};S.tal=d.tal||{};S.ach=d.ach||{};S.rel=d.rel||{};if(d.ess==null)S.ess=d.souls||0;S.life=Object.assign({buys:0,ups:0,specials:0,floors:0},d.life||{});S.ubord=d.ubord||['bd_none'];S.autoSal=(d.autoSal&&d.autoSal.length===8)?d.autoSal:DEF.autoSal.slice()}}catch(e){}
+try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d&&(typeof d!=='object'||typeof d.lvl!=='number'))throw new Error('save inválido');if(d){S=Object.assign(S,d);S.up=Object.assign({},DEF.up,d.up||{});S.items=d.items||[];S.eq=d.eq||{};if(!d.iv)S.iv=1;S.ucls=d.ucls||['knight'];S.uskin=d.uskin||['padrao'];S.uacc=d.uacc||['h_none','b_default'];S.uport=d.uport||['p_knight'];S.eggs=(d.eggs&&d.eggs.length===3)?d.eggs:[0,0,0];S.pets=d.pets||{};S.tal=d.tal||{};S.ach=d.ach||{};S.rel=d.rel||{};if(d.ess==null)S.ess=d.souls||0;S.life=Object.assign({buys:0,ups:0,specials:0,floors:0},d.life||{});S.ubord=d.ubord||['bd_none'];S.autoSal=(d.autoSal&&d.autoSal.length===8)?d.autoSal:DEF.autoSal.slice()}}catch(e){S=JSON.parse(JSON.stringify(DEF));try{const raw=localStorage.getItem('auraIdleSave1');if(raw)localStorage.setItem('auraIdleSave1_corrupt',raw)}catch(_){}setTimeout(()=>toast('Seu save não pôde ser lido. Use Restaurar backup no Perfil.'),4000)}
 // ===================== itens =====================
 const RAR=[{n:'Comum',c:'#b8c0cc',m:1,mx:5,f:1,fc:1},{n:'Incomum',c:'#48f07a',m:1.4,mx:8,f:3,fc:2},{n:'Raro',c:'#3fb4ff',m:2,mx:10,f:8,fc:4},{n:'Épico',c:'#b45cff',m:2.8,mx:12,f:20,fc:8},{n:'Lendário',c:'#ff8a1f',m:3.9,mx:15,f:50,fc:16},{n:'Mítico',c:'#ff3b5c',m:5.3,mx:18,f:120,fc:32},{n:'Ancestral',c:'#2fe0c8',m:7.2,mx:22,f:300,fc:64},{n:'Celestial',c:'#fff3a0',m:9.6,mx:25,f:800,fc:128}];
 const SLOTS=[{k:'weapon',n:'Arma',ic:'⚔️',p:'dmg',nm:['Espada','Lâmina','Machado','Montante']},{k:'helm',n:'Elmo',ic:'🪖',p:'gold',nm:['Elmo','Capacete','Coroa']},{k:'armor',n:'Armadura',ic:'🛡️',p:'sp',nm:['Peitoral','Couraça','Armadura']},{k:'gloves',n:'Luvas',ic:'🧤',p:'spd',nm:['Luvas','Manoplas']},{k:'boots',n:'Botas',ic:'🥾',p:'cc',nm:['Botas','Grevas']},{k:'amulet',n:'Amuleto',ic:'📿',p:'spirit',nm:['Amuleto','Talismã','Pingente']},{k:'ring',n:'Anel',ic:'💍',p:'cd',nm:['Anel','Selo']}];
@@ -388,7 +392,40 @@ const CH=[{n:'Baú de Madeira',body:0x6b3e1e,trim:0x8a8a90,glow:0xc8a070,css:'#c
 {n:'Baú Lendário',body:0x4a1010,trim:0xff8a1f,glow:0xff5a1a,css:'#ff8a1f',w:[0,0,0,20,42,25,10,3],items:3,gold:300,frag:80},
 {n:'Baú Celestial',body:0xf4f0ff,trim:0xfff3a0,glow:0xfff3a0,css:'#fff3a0',w:[0,0,0,0,25,40,25,10],items:4,gold:700,frag:250}];
 const FURY_NEED=30;
-function save(){S.last=Date.now();try{localStorage.setItem('auraIdleSave1',JSON.stringify(S))}catch(e){}}
+// ===================== SAVE SEGURO =====================
+// Código de exportação: AURA1-<hash FNV-1a do JSON>-<JSON em base64 UTF-8>.
+// Backup automático (1x por dia e antes de importar/apagar/restaurar) em SAVE_BAK.
+const SAVE_KEY='auraIdleSave1',SAVE_BAK='auraIdleSave1_bak',SAVE_FMT='AURA1';
+let saveLock=false,saveWarned=false;
+function save(){if(saveLock)return;S.last=Date.now();try{const j=JSON.stringify(S);localStorage.setItem(SAVE_KEY,j);const b=readBak();if(!b||b.day!==today())writeBak(j)}catch(e){if(!saveWarned){saveWarned=true;setTimeout(()=>toast('⚠️ Não foi possível salvar! Exporte seu progresso no Perfil'),300)}}}
+function fnv(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16).padStart(8,'0')}
+const b64e=t=>btoa(unescape(encodeURIComponent(t))),b64d=t=>decodeURIComponent(escape(atob(t)));
+function exportCode(){const j=JSON.stringify(S);return SAVE_FMT+'-'+fnv(j)+'-'+b64e(j)}
+// devolve {ok,data,msg}; nunca lança
+function decodeCode(code){try{const c=String(code||'').replace(/\s+/g,'');const m=c.match(/^AURA1-([0-9a-f]{8})-([A-Za-z0-9+/=]+)$/);if(!m)return{ok:false,msg:'Isso não parece um código do Aura Idle.'};
+ const j=b64d(m[2]);if(fnv(j)!==m[1])return{ok:false,msg:'O código está incompleto ou foi alterado. Copie de novo.'};const d=JSON.parse(j);
+ if(!d||typeof d!=='object'||typeof d.lvl!=='number'||typeof d.stage!=='number'||typeof d.gold!=='number')return{ok:false,msg:'O código não tem um progresso válido.'};return{ok:true,data:d,json:j}}catch(e){return{ok:false,msg:'Não foi possível ler o código.'}}}
+function readBak(){try{return JSON.parse(localStorage.getItem(SAVE_BAK)||'null')}catch(e){return null}}
+function writeBak(j){try{localStorage.setItem(SAVE_BAK,JSON.stringify({day:today(),t:Date.now(),d:j}))}catch(e){}}
+const saveSum=d=>`Nível ${d.lvl} · melhor estágio ${d.best||d.maxStage||d.stage} · ${d.asc||0} ${d.asc===1?'ascensão':'ascensões'}`;
+// grava outro progresso por cima do atual e recarrega; o atual vira backup antes
+function replaceSave(json){save();try{writeBak(localStorage.getItem(SAVE_KEY)||JSON.stringify(S))}catch(e){}saveLock=true;try{if(json==null)localStorage.removeItem(SAVE_KEY);else localStorage.setItem(SAVE_KEY,json)}catch(e){saveLock=false;toast('Não foi possível gravar: '+e.message);return}location.reload()}
+function svModal(o){$('svh').textContent=o.t;$('svp').innerHTML=o.p;const tx=$('svtx');tx.classList.toggle('hidden',!o.tx);tx.value=o.v||'';tx.readOnly=!!o.ro;tx.placeholder=o.ph||'';tx.rows=o.rows||5;$('svi').innerHTML='';
+ [['svb1',o.b1],['svb2',o.b2]].forEach(([id,b])=>{const el=$(id);el.classList.toggle('hidden',!b);if(b){el.textContent=b.l;el.className=b.c||'ib1';el.disabled=!!b.dis;el.onclick=b.f}});tx.oninput=o.inp||null;$('svmodal').classList.remove('hidden');if(o.tx&&!o.ro)setTimeout(()=>tx.focus(),50)}
+const svInfo=(h,bad)=>{$('svi').innerHTML=h;$('svi').style.color=bad?'#ff9aa8':'#9fe8b0'};
+function openExport(){save();const code=exportCode();svModal({t:'Exportar progresso',p:'Guarde este código num lugar seguro (bloco de notas, e-mail para você mesmo). Com ele você recupera tudo em qualquer navegador.',tx:1,ro:1,v:code,rows:5,
+ b1:{l:'Copiar código',f:async()=>{try{await navigator.clipboard.writeText(code);svInfo('✔ Copiado!')}catch(e){$('svtx').select();svInfo('Selecionei o código: copie com o menu do celular.')}}},
+ b2:{l:'Baixar arquivo',c:'ib2',f:()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download='aura-idle-save-'+today()+'.txt';document.body.appendChild(a);a.click();a.remove();svInfo('✔ Arquivo baixado.')}}})}
+function openImport(){let dec=null;const check=()=>{dec=decodeCode($('svtx').value);if(!$('svtx').value.trim()){svInfo('');$('svb1').disabled=true;return}if(dec.ok){svInfo('✔ Código válido: '+saveSum(dec.data)+'<br><b style="color:#ffd966">Isso substitui o progresso atual</b> ('+saveSum(S)+'). O atual vira backup.');$('svb1').disabled=false}else{svInfo(dec.msg,true);$('svb1').disabled=true}};
+ svModal({t:'Importar progresso',p:'Cole o código que você exportou ou abra o arquivo salvo.',tx:1,ph:'AURA1-...',rows:5,inp:check,
+ b1:{l:'Substituir meu progresso',c:'ib3',dis:true,f:()=>{if(dec&&dec.ok)replaceSave(dec.json)}},
+ b2:{l:'Abrir arquivo',c:'ib2',f:()=>{const i=document.createElement('input');i.type='file';i.accept='.txt,text/plain';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{$('svtx').value=t;check()})};i.click()}}})}
+function openReset(){svModal({t:'Apagar progresso',p:'Isso apaga <b>tudo</b>: nível, itens, mascotes, ascensões e temporada. Para confirmar, digite <b>APAGAR</b>. Uma cópia fica no backup automático.',tx:1,ph:'APAGAR',rows:1,
+ inp:()=>{$('svb1').disabled=$('svtx').value.trim().toUpperCase()!=='APAGAR'},b1:{l:'Apagar tudo',c:'ib3',dis:true,f:()=>{if($('svtx').value.trim().toUpperCase()==='APAGAR')replaceSave(null)}}})}
+function openRestore(){const b=readBak();if(!b){toast('Ainda não há backup');return}let d=null;try{d=JSON.parse(b.d)}catch(e){}if(!d){toast('O backup está corrompido');return}
+ svModal({t:'Restaurar backup',p:`Backup de <b>${new Date(b.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</b><br>${saveSum(d)}<br><br>O progresso atual (${saveSum(S)}) vira o novo backup, então dá para desfazer.`,
+ b1:{l:'Restaurar',c:'ib3',f:()=>replaceSave(b.d)}})}
+function renderSaveBox(){const b=readBak(),el=$('bakl');if(!el)return;el.innerHTML=b?`Backup automático: ${new Date(b.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}`:'O backup automático é feito uma vez por dia.'}
 // ===================== fórmulas =====================
 let fury=0,furyT=0;
 // ===================== RELÍQUIAS =====================
@@ -943,7 +980,7 @@ return{back:`<svg class="pfb" viewBox="0 0 100 100"><defs>${defs}</defs>${back}<
 function pfHTML(pk,bk,sz){const F=frameSVG(bk);return`<div class="pf" style="width:${sz}px;height:${sz}px">${F.back}<img src="${portraitURL(pk)}" alt="">${F.front}</div>`}
 function renderAvatar(){$('avatar').innerHTML=pfHTML(S.port,S.bord,46)}
 const fT=s=>{s=Math.floor(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${m}min`:`${m}min`};
-function renderProfile(){$('pfBig').innerHTML=pfHTML(S.port,S.bord,84);
+function renderProfile(){renderSaveBox();$('pfBig').innerHTML=pfHTML(S.port,S.bord,84);
 if(!$('pNameRow').querySelector('input'))$('pNameRow').innerHTML=`<span>${S.name.replace(/</g,'')}</span><button id="pEdit" aria-label="Editar nome">✏️</button>`;const pe=$('pEdit');if(pe)pe.onclick=()=>{$('pNameRow').innerHTML=`<input id="pIn" maxlength="16" value="${S.name.replace(/"/g,'')}">`;const i=$('pIn');i.focus();i.select();const done=()=>{S.name=(i.value.trim()||'Herói').slice(0,16);$('pNameRow').innerHTML='';renderProfile();save()};i.onblur=done;i.onkeydown=e=>{if(e.key==='Enter')i.blur()}};
 $('pTitle').textContent=`${CLS().n} · Aura ${TIERS[S.tier].n}`;$('pBadges').innerHTML=[`Nv ${S.lvl}`,`Melhor estágio ${S.best}`,`${S.asc} ascensões`,`${fmt(S.souls)} almas`].map(x=>`<span>${x}</span>`).join('');
 const L=S.up.crit,iv=ivAt(S.up.spd),hitDps=dmg()*(1+critC(L)*(critM(L)-1))/iv,spDps=spDmgAt(S.up.aura)/spCdAt(S.up.aura),spiDps=spiritDps()*S.up.spirit;
@@ -1276,7 +1313,9 @@ function loop(now){try{loopBody(now)}catch(e){loopErr++;console.error(e);if(loop
 function loopBody(now){let dt=(now-last)/1000;if(!fpsChecked){fpsN++;fpsT+=Math.min(dt,.2);if(fpsT>6){fpsChecked=true;if(fpsN/fpsT<28&&GFX()===1&&S.gfxAuto!==0){S.gfx=0;toast('Gráficos leves ativados para rodar melhor (mude na aba Herói)')}}}last=now;if(dt>.25){dt=.05}dt=Math.min(.05,dt);step(dt);render(dt);if(banT>0){banT-=dt;if(banT<=0){$('banner').classList.remove('show');banGap=.35}}else if(banGap>0){banGap-=dt;if(banGap<=0&&banQ.length){const q=banQ.shift();banner(q[0],q[1],q[2])}}
 uiT+=dt;updHud();if(uiT>.2){uiT=0;updPanel();if(openIt){const c=upCost(openIt);$('iup').disabled=openIt.u>=RAR[openIt.r].mx||S.frag<c.f||S.gold<c.g}$('dotHero').classList.toggle('on',S.seenHero===0&&curTab!=='hero');$('dotTal').classList.toggle('on',curTab!=='tal'&&talPts()>talUsed());if(curTab==='tal'&&(tpT=(tpT||0)+1)%5===0)renderTalHd();if((jT=(jT||0)+1)%5===0){$('dotJor').classList.toggle('on',curTab!=='jor'&&jorReady());$('dotPet').classList.toggle('on',curTab!=='pet'&&S.eggs.some(x=>x>0));if(curTab==='jor')renderJornada();if(curTab==='pet'&&petDirty)renderPets()}$('dotProf').classList.toggle('on',S.seenProf===0&&curTab!=='prof');if(curTab==='prof'&&!$('pNameRow').querySelector('input')&&(profT=(profT||0)+1)%5===0)renderProfile();if(invDirty){if(curTab==='inv')renderInv();else{invDirty=false;$('dotInv').classList.toggle('on',S.items.some(i=>i.nw)||SLOTS.some(s=>betterFor(s.k)))}}if(!$('pgAsc').classList.contains('hidden'))updAsc();else $('dotAsc').classList.toggle('on',soulGain()>0||relAff())}}
 // ===================== início =====================
-try{$('banner').parentNode.appendChild($('toast'))}catch(e){}try{setupComposer();migrateItems();if(!S.v7){S.v7=1;S.eggs[0]++}ensureDaily();calcIT();checkProfile(true);renderAvatar();buildHero()}catch(e){console.error(e);toast('Erro ao carregar: '+e.message)}rs();try{buildPet();updGems()}catch(e){console.error(e)}$('hmOk').onclick=()=>{$('hmodal').classList.add('hidden');if(curTab==='pet')renderPets()};applyTier(S.tier=tierOf(S.lvl));applyWorld(worldOf(S.stage),false);updPanel();updAsc();spawnStageChests();
+try{$('banner').parentNode.appendChild($('toast'))}catch(e){}try{setupComposer();migrateItems();if(!S.v7){S.v7=1;S.eggs[0]++}ensureDaily();calcIT();checkProfile(true);renderAvatar();buildHero()}catch(e){console.error(e);toast('Erro ao carregar: '+e.message)}rs();try{buildPet();updGems()}catch(e){console.error(e)}$('svExp').onclick=()=>{audioInit();openExport()};$('svImp').onclick=()=>{audioInit();openImport()};$('svDel').onclick=()=>{audioInit();openReset()};$('svRes').onclick=()=>{audioInit();openRestore()};$('svcl').onclick=()=>$('svmodal').classList.add('hidden');
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+$('hmOk').onclick=()=>{$('hmodal').classList.add('hidden');if(curTab==='pet')renderPets()};applyTier(S.tier=tierOf(S.lvl));applyWorld(worldOf(S.stage),false);updPanel();updAsc();spawnStageChests();
 if(S.last)offline((Date.now()-S.last)/1000);
 setTimeout(()=>{if(S.total<1)banner('AURA IDLE','Seu herói luta sozinho. Compre melhorias!');else if(!S.login.claimed)banner('RECOMPENSA DIÁRIA!','Dia '+S.login.streak+' · veja a aba Jornada','#7ae8ff');setTimeout(()=>{const E=EV();banner(E.ic+' '+E.n.toUpperCase(),E.d,'#ffd966')},2600)},600);
 requestAnimationFrame(loop);
