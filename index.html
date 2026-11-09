@@ -1819,9 +1819,9 @@ if(S.autobuy&&S.asc>0){abT+=dt;if(abT>.5){abT=0;let best=null,bc=1e300;UP.forEac
 const FURYC=new THREE.Color(0xffb02a);
 let zoomCam=false,profT=0,jT=0;
 function render(dt){
-if(zoomCam)camT.set(hero.position.x+Math.sin(t*.25)*1.1,2.15,hero.position.z+3.3);else camT.set(hero.position.x*.55,(cam.aspect<.9?12.5:9.5)*CAM_FAR,hero.position.z*.55+(cam.aspect<.9?9.5:8.5)*CAM_FAR);cam.position.lerp(camT,Math.min(1,dt*2.5));
+if(zoomCam)camT.set(hero.position.x+Math.sin(t*.25)*1.1,3.1,hero.position.z+8.6);else camT.set(hero.position.x*.55,(cam.aspect<.9?12.5:9.5)*CAM_FAR,hero.position.z*.55+(cam.aspect<.9?9.5:8.5)*CAM_FAR);cam.position.lerp(camT,Math.min(1,dt*2.5));
 if(shake>0){shake-=dt;cam.position.x+=(Math.random()-.5)*shake*.7;cam.position.y+=(Math.random()-.5)*shake*.7}
-lookT.lerp(zoomCam?tmp.set(hero.position.x,1.2,hero.position.z):tmp.set(hero.position.x*.7,.6,hero.position.z*.7),Math.min(1,dt*3));cam.lookAt(lookT);
+lookT.lerp(zoomCam?tmp.set(hero.position.x,2.7,hero.position.z):tmp.set(hero.position.x*.7,.6,hero.position.z*.7),Math.min(1,dt*3));cam.lookAt(lookT);
 moon.position.set(hero.position.x-6,12,hero.position.z+6);moon.target.position.copy(hero.position);
 const r=rd.domElement.getBoundingClientRect();
 for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.l+=dt;n.p.y+=dt*n.vy;n.vy*=.96;tmp.copy(n.p).project(cam);const sc2=n.l<.12?.6+n.l/.12*.6:1.2-Math.min(.2,(n.l-.12));n.el.style.transform=`translate(${(tmp.x+1)/2*r.width}px,${(1-tmp.y)/2*r.height}px) translate(-50%,-50%) scale(${sc2})`;{const sy=(1-tmp.y)/2*r.height,hf=Math.max(0,Math.min(1,(sy-HUDB)/28));n.el.style.opacity=(n.l>.7?1-(n.l-.7)/.4:1)*hf}if(n.l>1.1){n.el.remove();nums.splice(i,1)}}

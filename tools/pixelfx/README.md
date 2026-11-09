@@ -44,15 +44,18 @@ porque custava 8 ms em média, com picos de 45 ms.
 
 `tools/pixelfx/fx/` guarda efeitos próprios do jogo, importados por `entry.js` como os do pixelfx. Hoje:
 
-- `aura.js`: a aura do herói. O corpo é um volume do tamanho do herói 3D como ele aparece na tela (tronco em
-  elipse e cabeça, `BODY_TOP` = 30 px); a distância até esse corpo diz onde fica o contorno, e cada estilo desenha
-  em volta dele: 0 Comum, contorno que respira e pulso; 1 Incomum, redemoinho de vento e folhas; 2 Rara, raios
-  pulando pelo corpo e saindo para fora; 3 Épica, chamas roxas; 4 Lendária, fogo e brasas; 5 Mítica, chamas de
-  coração escuro, fumaça e raios; 6 Ancestral, espíritos com cauda; 7 Exaltada, cristais em órbita; 8 Divina, raios
-  de luz e auréola; 9 Primordial, fogo cósmico em arco-íris e estrelas. Todos têm um brilho suave atrás do corpo.
-  `drawBack` vai atrás do herói 3D e `draw` na frente; no jogo, as duas camadas ficam sobre o raio da câmera que
-  passa pelos pés, e `auraDraw` escala o sprite para que os `BODY_TOP` px tenham a altura do herói projetada na tela
-  (`AURA_HERO_H` = 2 unidades). Redesenho a 20 qps (10 no Leve). As partículas 3D que giravam nos pés ficam
+- `aura.js`: a aura do herói. A forma nasce da silhueta do próprio herói em pixel art (o boneco em pé do `rig2x`,
+  espelhado e engordado 2 px, `BODY_TOP` = 48 px de altura); a distância até ela diz onde fica o contorno. A peça
+  principal é `flame`: chama em faixas de cor (contorno escuro, três tons, fio branco junto ao herói), com duas
+  oitavas de ruído rolando para cima, base afinada nos pés, pedaços soltos nas pontas e uma onda de energia que sobe
+  pelo corpo (`surge`). Cada estilo tem silhueta própria: 0 Comum, véu fino que respira e pulso; 1 Incomum, fitas de
+  vento e folhas; 2 Rara, raios saindo do corpo e anel elétrico; 3 Épica, labareda roxa; 4 Lendária, fogo alto e
+  brasas; 5 Mítica, chamas de coração negro, fumaça e raios; 6 Ancestral, véu espectral, espíritos com cauda e runas;
+  7 Exaltada, cristais facetados em órbita; 8 Divina, asas de luz, raios e auréola; 9 Primordial, fogo cósmico em
+  arco-íris (o maior), anel de estrelas e raios. Todos têm um brilho suave atrás do corpo.
+  `drawBack` vai atrás do herói e `draw` na frente; no jogo, as duas camadas ficam sobre o raio da câmera que
+  passa pelos pés, e `auraDraw` escala o sprite para que os `BODY_TOP` px tenham a altura do herói na tela.
+  Redesenho a 20 qps (10 no Leve). As partículas 3D que giravam nos pés ficam
   escondidas e a luz da aura sobe para o peito, mais fraca, para não fazer mancha no chão.
   Nada é desenhado abaixo dos pés, e `tests/headless/auras.js` confere.
 
