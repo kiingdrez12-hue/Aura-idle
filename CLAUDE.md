@@ -11,6 +11,7 @@
 ## Verificação
 - Sintaxe: extraia o `<script>` e rode `node --check`.
 - Teste headless: Playwright + Chromium com `--use-gl=swiftshader`, trocando as URLs da CDN por `node_modules/three/` (three@0.128.0). A função global `step(dt)` avança a simulação.
+- Cenários prontos em `tests/headless/` (`npm i three@0.128.0 playwright` nessa pasta, depois `node run.js all`). Cada cenário tem `run` e `check`; falha se houver erro na página ou se um `check` não passar.
 
 ---
 

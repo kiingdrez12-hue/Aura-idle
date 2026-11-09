@@ -11,11 +11,12 @@
 ## Objetivo e condição de falha: o que é "funcionar"
 - **Objetivo:** subir o estágio máximo e o tier da aura, e completar a coleção (classes, skins, mascotes, conjuntos, cosméticos).
 - **Falha:** perder para o chefão no tempo limite, o que faz o herói voltar um estágio. Não existe game over.
+- **Ritmo de retorno:** todo dia (login, 3 missões, 3 lutas do Chefe Mundial, Torre); toda semana (missões semanais, novo chefe); a cada 28 dias (nova temporada); longo prazo (relíquias, estrelas dos mascotes).
 - **Uma sessão está completa quando** o jogador volta, recebe o ouro offline e a recompensa diária, faz pelo menos uma compra ou evolução que dê para sentir, e sai sabendo qual é a próxima meta.
 
 ## MVP para outras pessoas jogarem (versão de teste)
 Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estranhos jogando**:
-1. **Recursos que você ainda está desenvolvendo** *(preencher: liste aqui)*
+1. **Retenção (feito):** Passe de Temporada gratuito (28 dias, missões semanais, borda exclusiva), Relíquias Ancestrais (essência da ascensão), Chefe Mundial semanal (mascote exclusivo na faixa 10) e Evolução de mascotes (★1 a ★5). *(Adicione aqui outros recursos que ainda quiser.)*
 2. **Save seguro:** exportar e importar o save como texto, e um botão de apagar progresso com confirmação. Hoje o save existe só no `localStorage` (salva a cada 5 s e ao sair da aba); se o navegador limpar os dados, o progresso se perde.
 3. **Primeiros 5 minutos guiados:** dicas curtas que apontam para a primeira melhoria, o primeiro item, o primeiro chefão e a primeira ascensão. Hoje existe só um banner inicial.
 4. **Balanceamento da curva:** a 1ª ascensão deve sair em cerca de 30 a 60 minutos, sem parede de progresso nos primeiros 100 estágios.
@@ -29,7 +30,7 @@ Os sistemas já estão construídos. O que falta é fazer o jogo **aguentar estr
 - Novos sistemas grandes além dos que você está terminando.
 
 ## Ordem de construção
-1. Terminar os recursos que você está desenvolvendo (item 1 do MVP).
+1. ~~Recursos de retenção~~ feito (passe, relíquias, chefe mundial, evolução de mascotes).
 2. Save seguro: exportar, importar e apagar. É o que protege os testadores.
 3. Balanceamento: simular a curva com `step(dt)` no teste headless e ajustar custos e recompensas.
 4. Primeiros 5 minutos guiados.
