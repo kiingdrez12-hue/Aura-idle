@@ -956,7 +956,9 @@ function auraDraw(){if(!AURA.fx)return;const P=window.PixelFX,[b,f]=AURA.parts,h
 // ---- herói em pixel art (tools/pixelfx/fx/hero.js): o esqueleto do pixelfx vestido por classe, num sprite nos pés.
 // O herói 3D continua existindo (posição, direção, retrato antigo), só fica escondido. As poses vêm dos próprios golpes
 // do pixelfx: corte da espada, martelada, mísseis arcanos e giro de lâmina; o arqueiro tem as dele.
-const HERO2D={fx:null,part:null,acc:1,anim:null,flip:false,moving:false},HERO2D_HZ=24,HERO_PX=38,HERO_H=3;
+const HERO2D={fx:null,part:null,acc:1,anim:null,flip:false,moving:false},HERO2D_HZ=24,HERO_H=3;
+// altura do corpo no desenho, em px: 38 no boneco do pixelfx, vezes a resolução do esqueleto (SC = 2 em hero.js)
+let HERO_PX=38;
 const hero2dOK=()=>pfxOK()&&!!window.PixelFX.FX.hero;
 const HWP={knight:{weapon:'sword',fx:12,fy:-21,sa:-.85},paladin:{weapon:'hammer',two:true,sa:.62,fx:11,fy:-21,crouch:3},
  archer:{weapon:'bow',fx:12,fy:-24,sa:0,bx:6,by:-24},mage:{fx:8,fy:-20,bx:-4,by:-17,sa:-1.35}};
@@ -978,7 +980,7 @@ function heroPose(dt){const w=HWP[S.cls]||HWP.knight,A=HERO2D.anim,P=window.Pixe
  const br=Math.sin(performance.now()/1000*2.4);return{q:{...P.READY,...w,crouch:(w.crouch??3)+(br>0?1:0)},dx:0,dy:0}}
 const hx6=c=>'#'+new THREE.Color(c).getHexString();
 // monta (ou refaz) o sprite com a roupa da classe, as cores da skin e a raridade da armadura e da arma
-function heroSet(){if(!hero2dOK())return;const P=window.PixelFX,m=P.FX.hero,[w,h]=m.meta.size,[ox,oy]=m.meta.origin;
+function heroSet(){if(!hero2dOK())return;const P=window.PixelFX,m=P.FX.hero,[w,h]=m.meta.size,[ox,oy]=m.meta.origin;HERO_PX=38*(m.SC||1);
  if(!HERO2D.part)HERO2D.part=auraPart(w,h,ox,oy,10);
  const O=outfitOf(S.cls,S.skin),rA=eqR('armor'),rW=eqR('weapon');
  const look={a:hx6(O.a),c:hx6(O.c),t:rA>=0?'#'+rcol(rA).getHexString():hx6(O.t)};
@@ -999,7 +1001,7 @@ function heroDraw(dt){const H=HERO2D;if(!H.fx)return;const P=window.PixelFX,q=H.
 function heroBust(){const P=window.PixelFX,m=P.FX.hero,[w,h]=m.meta.size,[ox,oy]=m.meta.origin,fr=P.createFrame(w,h);
  const fx=P.createFx(m,{...HERO2D.fx.options,pose:{...P.READY,...(HWP[S.cls]||HWP.knight)},flip:false,x:ox,y:oy,shadow:false});fx.draw(fr);
  const c0=document.createElement('canvas');c0.width=w;c0.height=h;const g0=c0.getContext('2d'),im=g0.createImageData(w,h);P.composite(fr,im.data,null);g0.putImageData(im,0,0);
- const c=document.createElement('canvas');c.width=c.height=PSZ;const g=c.getContext('2d');g.imageSmoothingEnabled=false;const s=30;g.drawImage(c0,ox-s/2+2,oy-44,s,s,PSZ*.1,PSZ*.14,PSZ*.8,PSZ*.8);return c}
+ const c=document.createElement('canvas');c.width=c.height=PSZ;const g=c.getContext('2d');g.imageSmoothingEnabled=false;const k=m.SC||1,s=30*k;g.drawImage(c0,ox-s/2+2*k,oy-44*k,s,s,PSZ*.1,PSZ*.14,PSZ*.8,PSZ*.8);return c}
 function pfxKill(e){sc.remove(e.spr);const q=PFX_POOL[e.R.key]||(PFX_POOL[e.R.key]=[]);if(q.length<PFX_POOL_MAX)q.push(e.R);else{e.tex.dispose();e.mat.dispose()}}
 function pfxUpd(dt){if(!window.PixelFX)return;
 for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}

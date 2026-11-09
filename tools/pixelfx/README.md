@@ -56,9 +56,12 @@ porque custava 8 ms em média, com picos de 45 ms.
   escondidas e a luz da aura sobe para o peito, mais fraca, para não fazer mancha no chão.
   Nada é desenhado abaixo dos pés, e `tests/headless/auras.js` confere.
 
-- `hero.js`: os heróis em pixel art. O esqueleto do pixelfx (`rig.js`, o boneco dos golpes) resolve a pose e entrega
+- `rig2x.js`: cópia do esqueleto do pixelfx (`src/core/rig.js`) que rasteriza o corpo e as armas numa grade de meio
+  pixel (`SC` = 2): mesmo boneco e mesmas poses, com o dobro de resolução (contorno fino, sombreado suave, armas
+  definidas). Ao atualizar o pixelfx, refaça a cópia com as mesmas trocas (ver o cabeçalho do arquivo).
+- `hero.js`: os heróis em pixel art. O esqueleto em resolução dobrada (`rig2x.js`) resolve a pose e entrega
   cada pixel com tom e parte do corpo; aqui cada parte veste o material da classe (aço, pano, couro, pele, dourado)
-  nas cores da skin, e entram as peças extras: elmo com pluma (cavaleiro), asas douradas e cruz (paladino), chapéu,
+  nas cores da skin, com contorno colorido (o tom mais escuro de cada peça), e entram as peças extras: elmo com pluma (cavaleiro), asas douradas e cruz (paladino), chapéu,
   barba, manto em sino e cajado (mago), capuz e aljava (arqueiro), capa. A cor da raridade da armadura vai para os
   detalhes e a da arma puxa a lâmina. No jogo (`heroSet`, `heroDraw`, `heroPose`): sprite nos pés, 38 px de corpo =
   `HERO_H` (3) unidades em pé na tela; parado respira, andando dá passos, o golpe toca a trilha do efeito da classe
