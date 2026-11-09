@@ -252,6 +252,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .setbox{display:block!important;margin-top:8px;padding:8px 10px;border:1px solid;border-radius:10px;background:rgba(255,255,255,.03);font-size:12px;opacity:1!important}
 .setbox>div{display:block!important;opacity:.55;margin:2px 0}.setbox>div.on{opacity:1;font-weight:800}.setbox .sh{opacity:1!important;font-weight:900;margin-bottom:4px}
 .setbox small{opacity:.5;font-size:10px}
+/* === baú: notificação com o baú do pixelfx abrindo (canto inferior direito, acima da fúria) === */
+.chestc{position:absolute;right:10px;bottom:36px;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(8,9,18,.78);border:1px solid var(--cc,#ffd966);border-radius:12px;padding:2px 10px 6px;box-shadow:0 0 18px -6px var(--cc,#ffd966),0 4px 14px rgba(0,0,0,.5);animation:cpop .45s cubic-bezier(.2,1.6,.4,1);transition:opacity .3s,transform .3s}
+.chestc canvas{position:static!important;inset:auto;width:120px;height:90px;image-rendering:pixelated;display:block}
+.chestc .cn{font-size:11px;font-weight:900;letter-spacing:.04em;color:var(--cc,#ffd966);text-shadow:0 1px 2px #000;white-space:nowrap}
+.chestc .cr{font-size:10.5px;font-weight:700;opacity:.9;white-space:nowrap;min-height:13px}
+.chestc.out{opacity:0;transform:translateY(10px) scale(.9)}
+@keyframes cpop{from{opacity:0;transform:translateY(24px) scale(.3)}}
 </style>
 </head>
 <body>
@@ -269,6 +276,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
   </div>
   <div class="stage"><div class="t cz" id="stg">ESTÁGIO 1</div><div class="w" id="world">Praça Esquecida</div><div class="sbar" id="sbar"><i id="sfill"></i></div><div class="bossl hidden" id="bossl">CHEFÃO · 30s</div></div>
   <div class="loot" id="loot"></div>
+  <div class="chestc hidden" id="chestCard"><canvas id="chestCv" width="96" height="72"></canvas><div class="cn" id="chestN"></div><div class="cr" id="chestR"></div></div>
   <div class="fury" id="fury"><div class="l" id="furyl">FÚRIA · 0/30 ABATES</div><div class="fbar"><i id="ffill"></i></div></div>
   <div id="banner"><div class="a cz" id="ba"></div><div class="b" id="bb"></div></div>
  </div>
@@ -813,13 +821,36 @@ if(ti>=2){const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.07),new THREE.M
 const h=halo(1.1+ti*.4,C.glow);h.position.y=.35;g.add(h);
 return{g,lid,h,ti,t:0,open:0,s:.85+ti*.1}}
 function spawnStageChests(){const list=[];[[0,1],[1,.5],[2,.2],[3,.06],[4,.015],[5,.004]].forEach(([ti,p])=>{if(Math.random()<p)list.push(ti)});if(S.stage%10===0)list.push(2);if(EV().chest)list.push(Math.random()<.3?1:0);if(S.stage%25===0)list.push(3);if(S.stage%50===0)list.push(4);
+if(pfxOK()){list.forEach(queueChest);return}
 let best=-1;list.forEach(ti=>{if(chests.filter(c=>!c.open).length>=5)return;const c=makeChest(ti);let x,z,k=0;do{const a=Math.random()*6.283,r=3+Math.random()*7.5;x=Math.cos(a)*r;z=Math.sin(a)*r;k++}while(k<12&&chests.some(o=>Math.hypot(o.g.position.x-x,o.g.position.z-z)<1.7));c.g.position.set(x,3,z);c.g.rotation.y=Math.random()*6.28;sc.add(c.g);chests.push(c);best=Math.max(best,ti)});
 if(best>=2)setTimeout(()=>{banner(CH[best].n.toUpperCase()+'!','Apareceu no mapa',CH[best].css);if(best>=3)SFX.chest()},1200)}
-function openChest(c,tapped){if(c.open)return;c.open=.001;S.chestsN++;// sem coluna de luz ao abrir: o baú solta só partículas e os itens com o brilho da raridade em volta
-const C=CH[c.ti];SFX.chest();const g=goldBase(S.stage)*C.gold*goldM();dropCoins(c.g.position,g,12+c.ti*6);
-const fr=Math.ceil(C.frag*(1+S.stage*.05));S.frag+=fr;burst(c.g.position.x,.6,c.g.position.z,40+c.ti*30,C.glow,3+c.ti,6);num(c.g.position,'+'+fmt(g),'#ffd966',16,1.4);
-for(let i=0;i<C.items;i++)setTimeout(()=>dropItem(c.g.position,rollR(C.w),S.stage),250+i*280);
-if(c.ti>=2){shake=.25+c.ti*.08;flashScreen(.15+c.ti*.08)}if(tapped)feed('📦 '+C.n+' aberto!',C.css);invDirty=true}
+// recompensa de um baú do tier ti, entregue em pos: ouro, fragmentos e itens (os itens caem com atraso)
+function chestReward(ti,pos,itemsLater){const C=CH[ti];S.chestsN++;SFX.chest();const g=goldBase(S.stage)*C.gold*goldM();dropCoins(pos,g,12+ti*6);
+const fr=Math.ceil(C.frag*(1+S.stage*.05));S.frag+=fr;burst(pos.x,.6,pos.z,40+ti*30,C.glow,3+ti,6);
+if(!itemsLater)for(let i=0;i<C.items;i++)setTimeout(()=>dropItem(pos,rollR(C.w),S.stage),250+i*280);
+if(ti>=2){shake=.25+ti*.08;flashScreen(.1+ti*.05)}invDirty=true;return{g,fr}}
+function openChest(c,tapped){if(c.open)return;c.open=.001;// baú no chão (só quando o pixelfx não carrega)
+const C=CH[c.ti],r=chestReward(c.ti,c.g.position);num(c.g.position,'+'+fmt(r.g),'#ffd966',16,1.4);if(tapped)feed('📦 '+C.n+' aberto!',C.css)}
+// ---------- baú como notificação: o baú do pixelfx abre num cartão na cor da raridade, sem cair no chão
+const chestQ=[];let chestCur=null,chestGap=0;
+const CHEST_OPEN_AT=.8,CHEST_END=3.3,CHEST_SPEED=1.5;
+// paleta da luz e da madeira a partir das cores do tier
+function chestPal(ti){const C=CH[ti],g=new THREE.Color(C.glow),b=new THREE.Color(C.body),K=new THREE.Color(0x08060c),W=new THREE.Color(0xffffff),h=c=>'#'+c.getHexString();
+ return{palette:[.1,.25,.45,.65,.85].map(k=>h(K.clone().lerp(g,k))).concat([.15,.5,1].map(k=>h(g.clone().lerp(W,k)))),wood:[.2,.4,.6,.8,1].map(k=>h(K.clone().lerp(b,k))).concat([.2,.4].map(k=>h(b.clone().lerp(W,k))))}}
+function queueChest(ti){if(chestQ.length<8)chestQ.push(ti)}
+function chestStart(ti){const P=window.PixelFX,m=P.FX.chestOpen,[w,h]=m.meta.size,[ox,oy]=m.meta.origin,C=CH[ti];
+ chestCur={ti,t:0,given:0,items:0,fx:P.createFx(m,Object.assign({x:ox,y:oy,seed:Math.random()*1e9|0,coins:8+ti*3},chestPal(ti))),fr:P.createFrame(w,h),img:new ImageData(w,h),acc:1};
+ const el=$('chestCard');el.style.setProperty('--cc',C.css);$('chestN').textContent='📦 '+C.n.toUpperCase();$('chestR').textContent='';el.classList.remove('hidden','out');el.style.animation='none';void el.offsetWidth;el.style.animation=''}
+function updChest(dt){if(!chestCur){if(chestGap>0){chestGap-=dt;return}if(chestQ.length&&pfxOK())chestStart(chestQ.shift());return}
+ const c=chestCur,sp=CHEST_SPEED*(chestQ.length>3?1.7:1);c.fx.update(dt*sp);c.acc+=dt;
+ const pos=tmp.set(hero.position.x+Math.sin(face)*1.2,0,hero.position.z+Math.cos(face)*1.2);
+ if(!c.given&&c.fx.t>=CHEST_OPEN_AT){c.given=1;const r=chestReward(c.ti,pos,true);$('chestR').textContent='+'+fmt(r.g)+' 🪙  +'+fmt(r.fr)+' ✨'}
+ // os itens saem um a um enquanto a tampa está aberta
+ if(c.given&&c.items<CH[c.ti].items&&c.fx.t>=CHEST_OPEN_AT+.35*c.items){c.items++;dropItem(pos,rollR(CH[c.ti].w),S.stage)}
+ if(c.fx.t>=CHEST_END&&c.items>=CH[c.ti].items){$('chestCard').classList.add('out');chestCur=null;chestGap=.35}}
+// desenha o baú no cartão a 30 qps, recortado em volta do baú (96x72 do quadro de 176x112)
+function chestDraw(){const c=chestCur;if(!c||c.acc<1/PFX_HZ)return;c.acc=0;const P=window.PixelFX;P.clearFrame(c.fr);c.fx.draw(c.fr);P.composite(c.fr,c.img.data,null);
+ const cx=$('chestCv').getContext('2d');cx.clearRect(0,0,96,72);cx.putImageData(c.img,-40,-36)}
 // drops de itens
 const drops=[];
 function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
@@ -1094,7 +1125,7 @@ function ensureDaily(){const d=today();if(!S.daily||S.daily.day!==d){const r=rng
  if(!S.login)S.login={last:null,streak:0,claimed:false};const lg=S.login;if(lg.last!==d){const gap=lg.last?dayDiff(lg.last,d):99;lg.streak=gap===1?(lg.streak%7)+1:1;lg.last=d;lg.claimed=false;jDirty=true}}
 const LOGIN=[{t:'gems',v:30,ic:'💎',n:'30 gemas'},{t:'egg',v:0,ic:'🥚',n:'Ovo Comum'},{t:'gems',v:50,ic:'💎',n:'50 gemas'},{t:'chest',v:2,ic:'📦',n:'Baú de Ouro'},{t:'gems',v:80,ic:'💎',n:'80 gemas'},{t:'egg',v:1,ic:'🥚',n:'Ovo Raro'},{t:'gems',v:150,ic:'👑',n:'150 gemas + Baú Arcano',x:{t:'chest',v:3}}];
 function grant(r){if(r.t==='gems')addGems(r.v);else if(r.t==='egg'){S.eggs[r.v]++;toast('Você ganhou um '+EGGS[r.v].n+'! Veja em Mascotes');petDirty=true}else if(r.t==='chest')spawnChestType(r.v);else if(r.t==='frag'){S.frag+=r.v;invDirty=true}else if(r.t==='boost')S.boostUntil=Math.max(Date.now(),S.boostUntil||0)+r.v*60e3;else if(r.t==='bord'){if(!S.ubord.includes(r.v)){S.ubord.push(r.v);S.seenProf=0;banner('BORDA EXCLUSIVA!','⭕ '+BORDS.find(b=>b.k===r.v).n,'#ffd966')}else addGems(100)}if(r.x)grant(r.x)}
-function spawnChestType(ti){if(tower.on){S.pendingChest=(S.pendingChest||[]).concat(ti);return}const c=makeChest(ti);let x,z,k=0;do{const a=Math.random()*6.283,r=3+Math.random()*7.5;x=Math.cos(a)*r;z=Math.sin(a)*r;k++}while(k<12&&chests.some(o=>Math.hypot(o.g.position.x-x,o.g.position.z-z)<1.7));c.g.position.set(x,3,z);c.g.rotation.y=Math.random()*6.28;sc.add(c.g);chests.push(c);if(ti>=2)banner(CH[ti].n.toUpperCase()+'!','Caiu no mapa',CH[ti].css)}
+function spawnChestType(ti){if(tower.on){S.pendingChest=(S.pendingChest||[]).concat(ti);return}if(pfxOK()){queueChest(ti);return}const c=makeChest(ti);let x,z,k=0;do{const a=Math.random()*6.283,r=3+Math.random()*7.5;x=Math.cos(a)*r;z=Math.sin(a)*r;k++}while(k<12&&chests.some(o=>Math.hypot(o.g.position.x-x,o.g.position.z-z)<1.7));c.g.position.set(x,3,z);c.g.rotation.y=Math.random()*6.28;sc.add(c.g);chests.push(c);if(ti>=2)banner(CH[ti].n.toUpperCase()+'!','Caiu no mapa',CH[ti].css)}
 // conquistas
 const ACH=[];[['kills','Caçador',[100,1000,10000,100000],[20,40,80,150]],['bosses','Matador de Chefões',[10,50,200,1000],[20,50,100,200]],['best','Explorador',[25,50,100,200],[30,60,120,250]],['lvl','Experiente',[25,50,100,150],[30,60,120,250]],['found','Colecionador',[50,300,1000],[20,50,100]],['chests','Caçador de Tesouros',[25,100,500],[20,50,120]],['asc','Ascendido',[1,5,10,25],[50,100,200,400]],['pets','Domador',[3,8,12],[40,80,200]],['tower','Escalador',[10,25,50,100],[40,80,160,300]]].forEach(([k,n,gs,rs])=>gs.forEach((g,i)=>ACH.push({id:k+i,k,n:n+' '+['I','II','III','IV'][i],g,rw:rs[i]})));
 const ACHD={kills:'Derrote {g} monstros',bosses:'Derrote {g} chefões',best:'Alcance o estágio {g}',lvl:'Alcance o nível {g}',found:'Encontre {g} itens',chests:'Abra {g} baús',asc:'Faça {g} ascensões',pets:'Tenha {g} mascotes',tower:'Chegue ao andar {g} da Torre'};
@@ -1264,7 +1295,7 @@ function renderTalPg(){renderTal();renderTalHd();const D=['DOM','SEG','TER','QUA
 // ===================== loop =====================
 let t=0,last=performance.now(),uiT=0,saveT=0,abT=0,secT=0;
 const tmp=new THREE.Vector3(),camT=new THREE.Vector3(),lookT=new THREE.Vector3();
-function step(dt){t+=dt;pfxUpd(dt);
+function step(dt){t+=dt;pfxUpd(dt);if(!tower.on)updChest(dt);
 // spawn
 if(tower.on){if(tower.wb)updWB(dt);else updTower(dt)}else{
 const alive=enemies.filter(e=>!e.dead&&!e.boss).length,want=Math.min(8,4+Math.floor(S.stage/6));
@@ -1345,7 +1376,7 @@ lookT.lerp(zoomCam?tmp.set(hero.position.x,1.2,hero.position.z):tmp.set(hero.pos
 moon.position.set(hero.position.x-6,12,hero.position.z+6);moon.target.position.copy(hero.position);
 const r=rd.domElement.getBoundingClientRect();
 for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.l+=dt;n.p.y+=dt*n.vy;n.vy*=.96;tmp.copy(n.p).project(cam);const sc2=n.l<.12?.6+n.l/.12*.6:1.2-Math.min(.2,(n.l-.12));n.el.style.transform=`translate(${(tmp.x+1)/2*r.width}px,${(1-tmp.y)/2*r.height}px) translate(-50%,-50%) scale(${sc2})`;{const sy=(1-tmp.y)/2*r.height,hf=Math.max(0,Math.min(1,(sy-HUDB)/28));n.el.style.opacity=(n.l>.7?1-(n.l-.7)/.4:1)*hf}if(n.l>1.1){n.el.remove();nums.splice(i,1)}}
-pfxDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
+pfxDraw();chestDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
 function updHud(){$('goldv').textContent=fmt(S.gold);$('gps').textContent='+'+fmt(S.gps)+'/s'+(furyT>0?'  ·  FÚRIA x2':'')+(Date.now()<(S.boostUntil||0)?'  ·  OURO x2 '+Math.ceil((S.boostUntil-Date.now())/60000)+'min':'');$('lvl').textContent='Nv '+S.lvl;$('xp').style.width=(S.xp/xpNeed(S.lvl)*100)+'%';
 const sb=$('sbar');if(tower.on&&tower.wb){const B=wbBoss();$('stg').textContent='CHEFE MUNDIAL';$('world').textContent=B.n;sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/WB_T*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=B.ic+' DANO '+fmt(tower.run||0)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else if(tower.on){$('stg').textContent='TORRE · ANDAR '+tower.f;$('world').textContent='Torre de Desafio';sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/40*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=(tower.boss?'GUARDIÃO':'ABATES '+Math.min(tower.kills,tower.need)+'/'+tower.need)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else{$('world').textContent=$('world').textContent==='Torre de Desafio'?WORLDS[worldOf(S.stage)].n:$('world').textContent;
 $('stg').textContent='ESTÁGIO '+S.stage+(S.stage%10===0?' 💀':'');

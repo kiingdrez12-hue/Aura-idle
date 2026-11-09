@@ -24,6 +24,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | fúria | `lightning/thunderclap` (com silhueta vazia, para não desenhar o boneco do pixelfx) |
 | qualquer item no chão / item raro coletado | `tools/pixelfx/fx/loot-aura.js` (versão própria do `pickups/loot-beam`: espada com brilho só em volta, sem coluna de luz) / `pickups/collect-burst`, na cor da raridade |
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
+| baú (qualquer tier) | `pickups/chest-open` num cartão de notificação no canto inferior direito, com luz e madeira nas cores do tier (`chestPal`); o baú não cai mais no chão e a recompensa chega quando a tampa abre |
 | nova aura | `holy/holy-pillar` (nas cores da aura) |
 
 No código (`index.html`): `pfx(id, x, y, z, opções)` cria um efeito na posição do mundo; `pfxUpd(dt)` roda dentro

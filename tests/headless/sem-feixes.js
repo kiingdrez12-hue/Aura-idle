@@ -10,7 +10,8 @@ module.exports={
   const found=[];
   // baús de todas as raridades
   enemies.forEach(e=>sc.remove(e.g));enemies=[];
-  for(let ti=0;ti<6;ti++){spawnChestType(ti);const c=chests[chests.length-1];for(let i=0;i<20;i++)step(.05);openChest(c,0);for(let i=0;i<8;i++){step(.05);found.push(...beams())}}
+  for(let ti=0;ti<6;ti++)spawnChestType(ti);
+  for(let i=0;i<600&&(chestQ.length||chestCur);i++){step(.05);if(i%4===0)found.push(...beams())}
   // itens de todas as raridades no chão
   for(let r=0;r<8;r++)dropItem(hero.position,r,S.stage);for(let i=0;i<10;i++){step(.05);found.push(...beams())}
   return {found}}),

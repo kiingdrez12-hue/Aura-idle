@@ -20,11 +20,12 @@ import * as thunderclap from "pixelfx/fx/lightning/thunderclap";
 import * as smite from "pixelfx/fx/holy/smite";
 import * as spawnPortal from "pixelfx/fx/spawn/spawn-portal";
 import * as collectBurst from "pixelfx/fx/pickups/collect-burst";
+import * as chestOpen from "pixelfx/fx/pickups/chest-open";
 
 window.PixelFX = {
   createFrame, clearFrame, createFx, composite,
   FX: {
     hitSpark, critHit, poof, plasmaExplosion, lootAura, manaBurst, holyPillar,
-    swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, smite, spawnPortal, collectBurst,
+    swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, smite, spawnPortal, collectBurst, chestOpen,
   },
 };
