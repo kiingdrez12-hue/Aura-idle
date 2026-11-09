@@ -294,6 +294,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 @keyframes pwrUp{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
 /* === recompensas da volta === */
 .offl{text-align:left;font-size:14px;line-height:1.9;margin:8px auto 0;display:inline-block}
+/* === ícones de equipamento em pixel art === */
+.slot img.ico{width:84%;height:84%;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+.slot.empty img.ico{filter:grayscale(1) brightness(.55);opacity:.7}
+#iic .icoL{width:96px;height:96px;image-rendering:pixelated;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}
 </style>
 </head>
 <body>
@@ -907,12 +911,89 @@ function chestDraw(){const c=chestCur;if(!c||c.acc<1/PFX_HZ)return;c.acc=0;const
  const cx=$('chestCv').getContext('2d');cx.clearRect(0,0,96,72);cx.putImageData(c.img,-40,-36)}
 // drops de itens
 const drops=[];
-function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group();const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.17),new THREE.MeshBasicMaterial({color:col}));gem.position.y=.5;g.add(gem);
+// ===================== ícones de equipamento em pixel art =====================
+// Cada forma é desenhada numa grade 32×32 com códigos de material (1 metal, 2 couro/cabo, 3 pedra, 4 acabamento).
+// Depois: sombreado automático (luz de cima à esquerda), contorno escuro e, nas raridades altas, brilho e faíscas.
+const ICO_N=32;
+const ICO_MAT=[ // por raridade: metal [escuro, médio, claro, brilho] e acabamento
+ {m:['#3c4250','#6b7383','#a3abba','#e2e6ee'],t:['#5a4630','#8a6a40','#b8925a','#e0c48a']},
+ {m:['#2f4a3a','#4f7a5c','#86b48c','#d2f0cf'],t:['#4a4a52','#7a7a86','#b4b4c0','#e8e8f0']},
+ {m:['#22406a','#3a6aa8','#6aa6e0','#d0ecff'],t:['#4a4a52','#8a8a96','#c4c4d0','#f0f0f8']},
+ {m:['#3a2266','#6440a8','#9a6ee0','#e4d0ff'],t:['#6a4a10','#a87a18','#e0b030','#fff0a0']},
+ {m:['#6a3a08','#b0700e','#f0b030','#fff2a8'],t:['#5a1a0a','#9a2e10','#d85a20','#ffb070']},
+ {m:['#5a0a18','#9a1a2c','#e0384a','#ffc0c4'],t:['#6a4a10','#a87a18','#e8b830','#fff4b0']},
+ {m:['#0a4a44','#147c70','#2ec4ae','#c4fff0'],t:['#6a4a10','#a87a18','#e8b830','#fff4b0']},
+ {m:['#8a7a50','#c8b884','#f4ecc8','#ffffff'],t:['#6a4a10','#c09020','#ffd84a','#fffbe0']}];
+const ICO_LEA=['#2a170c','#4a2c16','#6e4424','#94643a'];
+function icoGrid(){const g=new Uint8Array(ICO_N*ICO_N);
+ const set=(x,y,c)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<ICO_N&&y<ICO_N)g[y*ICO_N+x]=c};
+ const D={g,set,
+  R(x0,y0,x1,y1,c){for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)set(x,y,c)},
+  C(cx,cy,r,c){for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(x*x+y*y<=r*r+r*.8)set(cx+x,cy+y,c)},
+  E(cx,cy,rx,ry,c){for(let y=-ry;y<=ry;y++)for(let x=-rx;x<=rx;x++)if((x*x)/(rx*rx+.01)+(y*y)/(ry*ry+.01)<=1.05)set(cx+x,cy+y,c)},
+  L(x0,y0,x1,y1,w,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))*2||1,r=(w-1)/2;for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n;for(let yy=-r;yy<=r;yy++)for(let xx=-r;xx<=r;xx++)if(xx*xx+yy*yy<=r*r+.6)set(Math.round(x+xx),Math.round(y+yy),c)}},
+  P(pts,c){let mnx=99,mny=99,mxx=0,mxy=0;pts.forEach(([x,y])=>{mnx=Math.min(mnx,x);mny=Math.min(mny,y);mxx=Math.max(mxx,x);mxy=Math.max(mxy,y)});
+   for(let y=Math.floor(mny);y<=mxy;y++)for(let x=Math.floor(mnx);x<=mxx;x++){let ins=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if(((yi>y+.5)!==(yj>y+.5))&&(x+.5<(xj-xi)*(y+.5-yi)/(yj-yi)+xi))ins=!ins}if(ins)set(x,y,c)}}};
+ return D}
+// formas: weapon 0..3, helm 0..2, armor 0..2, gloves 0..1, boots 0..1, amulet 0..2, ring 0..1
+const ICO_SHAPE={
+ weapon:[
+  D=>{D.L(9,22,25,6,5,1);D.P([[23,4],[29,2],[27,9]],1);D.L(11,20,24,7,1,4);D.L(4,16,15,27,3,4);D.L(4,28,9,23,3,2);D.C(3,29,2,4);D.C(9,22,1,3)},            // Espada
+  D=>{D.P([[8,22],[12,16],[17,10],[23,5],[30,1],[29,6],[27,11],[22,17],[15,23],[11,26]],1);D.L(5,18,13,27,3,4);D.L(3,29,8,24,3,2);D.C(3,29,1,4);D.set(10,22,3)},                       // Lâmina (curva fina)
+  D=>{D.L(6,28,22,10,3,2);D.P([[16,6],[23,1],[30,4],[31,14],[26,17],[20,12]],1);D.P([[19,7],[14,2],[11,8],[16,11]],1);D.C(6,28,2,4);D.set(24,8,3)}, // Machado
+  D=>{D.L(11,19,26,4,7,1);D.P([[23,2],[30,1],[29,8]],1);D.L(12,18,25,5,1,4);D.L(3,13,17,27,4,4);D.L(2,29,9,22,4,2);D.C(2,29,2,4);D.C(10,20,2,3)}],     // Montante
+ helm:[
+  D=>{D.E(16,15,10,10,1);D.R(6,15,26,24,1);D.R(9,17,23,19,0);D.R(15,17,17,26,1);D.R(6,24,26,26,4);D.R(15,4,17,6,4);D.set(16,12,3)}, // Elmo
+  D=>{D.E(16,16,11,9,1);D.R(5,16,27,20,1);D.R(4,20,28,22,4);D.R(8,13,24,13,4);D.set(16,9,3)},                                       // Capacete
+  D=>{D.R(6,16,26,25,4);D.P([[6,16],[6,6],[11,12],[16,4],[21,12],[26,6],[26,16]],4);D.R(6,22,26,23,1);D.set(16,19,3);D.set(10,19,3);D.set(22,19,3);D.set(16,5,3);D.set(6,6,3);D.set(26,6,3)}], // Coroa
+ armor:[
+  D=>{D.P([[7,6],[13,6],[16,9],[19,6],[25,6],[29,12],[25,14],[24,27],[8,27],[7,14],[3,12]],1);D.R(15,10,17,26,4);D.set(16,15,3)},              // Peitoral
+  D=>{D.P([[6,5],[26,5],[28,13],[24,15],[24,28],[8,28],[8,15],[4,13]],1);D.R(8,16,23,17,2);D.R(8,22,23,23,2);D.R(14,5,18,8,0);D.R(15,16,17,17,4);D.set(16,11,3)}, // Couraça
+  D=>{D.P([[9,7],[23,7],[25,26],[7,26]],1);D.E(6,10,5,4,4);D.E(26,10,5,4,4);D.R(10,26,22,29,2);D.R(9,17,23,18,4);D.set(16,12,3)}],         // Armadura
+ gloves:[
+  D=>{D.P([[8,10],[22,10],[24,22],[20,26],[10,26],[7,20]],2);D.R(9,6,11,12,2);D.R(13,4,15,12,2);D.R(17,5,19,12,2);D.L(22,15,26,12,3,2);D.R(9,12,21,14,1);D.R(8,23,22,28,1);D.R(8,25,22,25,4)}, // Luvas
+  D=>{D.P([[7,11],[23,11],[25,22],[21,25],[9,25],[6,19]],1);D.R(8,6,11,12,1);D.R(12,4,15,12,1);D.R(16,5,19,12,1);D.L(22,16,27,12,3,1);D.R(7,22,23,28,4);D.R(10,15,20,16,4);D.set(15,19,3)}], // Manoplas
+ boots:[
+  D=>{D.P([[10,4],[19,4],[19,20],[27,23],[27,28],[9,28]],2);D.R(9,26,27,28,1);D.P([[19,20],[27,23],[27,26],[19,26]],1);D.R(10,4,19,7,4);D.R(10,12,19,13,4)},                     // Botas
+  D=>{D.P([[9,3],[20,3],[20,19],[28,22],[28,28],[8,28]],1);D.R(8,26,28,28,2);D.R(9,8,20,9,4);D.R(9,14,20,15,4);D.E(14,19,3,2,4);D.set(14,19,3)}], // Grevas
+ amulet:[
+  D=>{D.L(6,4,13,16,1,4);D.L(26,4,19,16,1,4);D.L(6,4,26,4,1,4);D.C(16,21,7,4);D.C(16,21,4,3)},                                         // Amuleto
+  D=>{D.L(7,3,13,12,1,2);D.L(25,3,19,12,1,2);D.P([[16,10],[25,19],[16,29],[7,19]],4);D.P([[16,14],[21,19],[16,25],[11,19]],3)},             // Talismã
+  D=>{D.L(6,4,14,15,1,4);D.L(26,4,18,15,1,4);D.C(16,17,3,4);D.P([[11,20],[21,20],[16,30]],3);D.R(11,19,21,20,4)}],                         // Pingente
+ ring:[
+  D=>{D.C(16,19,9,4);D.C(16,19,6,0);D.C(16,9,5,4);D.C(16,9,3,3)},                                                                     // Anel
+  D=>{D.C(16,20,9,4);D.C(16,20,5,0);D.R(9,4,23,13,4);D.R(11,6,21,11,1);D.R(14,7,18,10,3)}]};                                            // Selo
+const icoCache={};
+/** Data URL do ícone (slot, variante da forma, raridade, variação). Fica em cache. */
+function itemIcon(slot,vi,r,va=0){const key=slot+vi+'|'+r+'|'+(va&1);if(icoCache[key])return icoCache[key];
+ const D=icoGrid(),fs=ICO_SHAPE[slot]||ICO_SHAPE.weapon;(fs[vi]||fs[0])(D);const g=D.g,N=ICO_N,M=ICO_MAT[r]||ICO_MAT[0];
+ const trim=(va&1)&&r<3?ICO_MAT[2].t:M.t,gem=RAR[r].c,at=(x,y)=>x<0||y<0||x>=N||y>=N?0:g[y*N+x];
+ const cv=document.createElement('canvas');cv.width=cv.height=N;const cx=cv.getContext('2d');
+ const ramp=c=>c===1?M.m:c===2?ICO_LEA:c===4?trim:null;
+ // brilho externo (Épico+)
+ if(r>=3){cx.fillStyle=gem;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!at(x,y)){let n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(at(x+dx,y+dy))n++;if(n){cx.globalAlpha=Math.min(.55,n*.06);cx.fillRect(x,y,1,1)}}cx.globalAlpha=1}
+ // contorno
+ cx.fillStyle='#0b0812';for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!at(x,y)&&(at(x-1,y)||at(x+1,y)||at(x,y-1)||at(x,y+1)))cx.fillRect(x,y,1,1);
+ // preenchimento com sombreado: luz vem de cima à esquerda
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){const c=at(x,y);if(!c)continue;let col;
+  if(c===3){col=at(x-1,y-1)!==3?'#ffffff':gem;if(r<2)col=trim[2]}
+  else{const R=ramp(c),lt=at(x-1,y)!==c||at(x,y-1)!==c,dk=at(x+1,y)!==c||at(x,y+1)!==c;col=lt&&!dk?R[2]:dk&&!lt?R[0]:R[1];if(lt&&at(x-1,y-1)!==c&&at(x-1,y)!==c&&at(x,y-1)!==c)col=R[3]}
+  cx.fillStyle=col;cx.fillRect(x,y,1,1)}
+ // faíscas (Lendário+)
+ if(r>=4){cx.fillStyle='#fffbe6';[[4,5],[27,25],[25,4]].slice(0,r-3).forEach(([x,y])=>{cx.fillRect(x,y,1,1);cx.globalAlpha=.6;cx.fillRect(x-1,y,1,1);cx.fillRect(x+1,y,1,1);cx.fillRect(x,y-1,1,1);cx.fillRect(x,y+1,1,1);cx.globalAlpha=1})}
+ return icoCache[key]={url:cv.toDataURL(),cv,tex:null}}
+/** Ícone de um item do save: forma pelo nome-base, variação pelo id. */
+function itIcon(it){const sl=slotOf(it.s),vi=Math.max(0,sl.nm.findIndex(n=>it.nm.startsWith(n)));return itemIcon(it.s,vi,it.r,it.id)}
+/** <img> pixelado do ícone. */
+const icoImg=(it,cls='ico')=>`<img class="${cls}" src="${itIcon(it).url}" alt="">`;
+/** Textura Three.js do ícone (pixels nítidos), criada uma vez por ícone. */
+function itTex(it){const o=itIcon(it);if(!o.tex){o.tex=new THREE.CanvasTexture(o.cv);o.tex.magFilter=THREE.NearestFilter;o.tex.minFilter=THREE.NearestFilter;o.tex.generateMipmaps=false;o.tex.encoding=THREE.sRGBEncoding}return o.tex}
+function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.Group(),it=makeItem(r,il);const gem=new THREE.Sprite(new THREE.SpriteMaterial({map:itTex(it),transparent:true,depthWrite:false}));const gs=.95+r*.05;gem.scale.set(gs,gs,1);gem.position.y=.5;g.add(gem);
 const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06+r*.03,.2+r*.06,3+r*1.2,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.6}));beam.position.y=(3+r*1.2)/2;g.add(beam);const h=halo(.9+r*.25,col);h.position.y=.5;g.add(h);
 const a=Math.random()*6.283,d=.6+Math.random()*1.2;g.position.set(pos.x+Math.cos(a)*d,0,pos.z+Math.sin(a)*d);sc.add(g);
-// item no chão: espada do pixelfx com brilho da raridade só em volta (sem feixe para cima); sem pixelfx, a joia 3D
-const fx=pfx('lootAura',g.position.x,0,g.position.z,{scale:1.3,hz:15,follow:g.position,palette:['#'+col.clone().multiplyScalar(.2).getHexString(),'#'+col.clone().multiplyScalar(.6).getHexString(),'#'+col.getHexString(),'#ffffff'],power:r/7});
-beam.visible=!fx&&r>=1;drops.push({g,gem,beam,halo:h,fx,it:makeItem(r,il),t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
+// item no chão: o próprio ícone do item flutuando, com o brilho da raridade em volta (sem feixe para cima)
+beam.userData.off=1;h.scale.multiplyScalar(1.2);const fx=pfx('lootAura',g.position.x,0,g.position.z,{scale:1.3,hz:15,follow:g.position,sword:0,palette:['#'+col.clone().multiplyScalar(.2).getHexString(),'#'+col.clone().multiplyScalar(.6).getHexString(),'#'+col.getHexString(),'#ffffff'],power:r/7});
+drops.push({g,gem,beam,halo:h,fx,it,t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
 if(r>=3){shake=Math.max(shake,.2+r*.06);SFX.tier()}else tone(660+r*200,.18,'triangle',.1)}
 function addItem(it){if(S.items.length>=60){const pool=S.items.filter(i=>!isEq(i)).sort((a,b)=>a.r-b.r||itemScore(a)-itemScore(b));const low=pool[0];if(low&&low.r<=it.r){S.items.splice(S.items.indexOf(low),1);S.frag+=fragOf(low)}else{S.frag+=fragOf(it);feed('Mochila cheia · desmanchado','#9fe8ff');return}}
 const R=RAR[it.r],bt=isBetter(it);if(S.autoSal[it.r]&&!bt){const f=fragOf(it);S.frag+=f;S.found++;invDirty=true;return}
@@ -1427,16 +1508,16 @@ const grid=(id,list,unl,cur,mk,set)=>{const g=$(id);g.innerHTML='';list.forEach(
 grid('portg',PORTS,S.uport,S.port,x=>pfHTML(x.k,S.bord,50),k=>S.port=k);grid('bordg',BORDS,S.ubord,S.bord,x=>pfHTML(S.port,x.k,50),k=>S.bord=k)}
 // ===================== inventário =====================
 const betterFor=k=>{const cur=itemScore(eqItem(k));return S.items.some(i=>i.s===k&&!isEq(i)&&itemScore(i)>cur*1.001)};
-function itemBtn(it){const R=RAR[it.r],b=document.createElement('button');b.className='slot';b.style.borderColor=R.c;b.style.boxShadow=`inset 0 0 12px ${R.c}55`;b.innerHTML=slotOf(it.s).ic+(it.u?`<span class="u">+${it.u}</span>`:'')+(it.nw?'<span class="nw"></span>':'')+(it.set!=null?`<span class="setb" style="background:${SETS[it.set].c}">${SETS[it.set].ic}</span>`:'');if(isBetter(it))b.classList.add('better');b.onclick=()=>openItem(it);return b}
+function itemBtn(it){const R=RAR[it.r],b=document.createElement('button');b.className='slot';b.style.borderColor=R.c;b.style.boxShadow=`inset 0 0 12px ${R.c}55`;b.innerHTML=icoImg(it)+(it.u?`<span class="u">+${it.u}</span>`:'')+(it.nw?'<span class="nw"></span>':'')+(it.set!=null?`<span class="setb" style="background:${SETS[it.set].c}">${SETS[it.set].ic}</span>`:'');if(isBetter(it))b.classList.add('better');b.onclick=()=>openItem(it);return b}
 function renderInv(){invDirty=false;renderAsal();$('fragv').textContent=fmt(S.frag);const eqg=$('eqg');eqg.innerHTML='';
-SLOTS.forEach(sl=>{const it=eqItem(sl.k);let b;if(it)b=itemBtn(it);else{b=document.createElement('button');b.className='slot empty';b.textContent=sl.ic;b.onclick=()=>toast(sl.n+': nenhum item equipado')}if(betterFor(sl.k))b.classList.add('better');eqg.appendChild(b)});
+SLOTS.forEach(sl=>{const it=eqItem(sl.k);let b;if(it)b=itemBtn(it);else{b=document.createElement('button');b.className='slot empty';b.innerHTML='<img class="ico" src="'+itemIcon(sl.k,0,0).url+'" alt="">';b.onclick=()=>toast(sl.n+': nenhum item equipado')}if(betterFor(sl.k))b.classList.add('better');eqg.appendChild(b)});
 const bon=Object.entries(IT).filter(([k,v])=>v>0).map(([k,v])=>`${STL[k]} <b>+${fmtS(k,v)}</b>`);const sst=setState().map((x,i)=>x.n?`<span style="color:${SETS[i].c}">${SETS[i].ic} ${SETS[i].n} ${x.n}/7</span>`:'').filter(Boolean);$('bonus').innerHTML=bon.length?'Bônus dos itens: '+bon.join(' · ')+(sst.length?'<br>Conjuntos: '+sst.join(' · '):''):'Derrote monstros e abra baús para encontrar itens. Equipados, eles dão bônus permanentes.';
 const bag=$('bag');bag.innerHTML='';const list=S.items.filter(i=>!isEq(i)).sort((a,b)=>b.r-a.r||itemScore(b)-itemScore(a));list.forEach(it=>bag.appendChild(itemBtn(it)));if(!list.length)bag.innerHTML='<div class="empty-bag">Mochila vazia</div>';
 $('bagl').textContent=`MOCHILA ${list.length}/${60-SLOTS.filter(s=>eqItem(s.k)).length}`;$('dotInv').classList.toggle('on',curTab!=='inv'&&(S.items.some(i=>i.nw)||SLOTS.some(s=>betterFor(s.k))))}
 let openIt=null;
 function setBlock(it){if(it.set==null)return'';const T=SETS[it.set],st=setState()[it.set];return `<div class="setbox" style="border-color:${T.c}"><div class="sh" style="color:${T.c}">${T.ic} Conjunto ${T.n} · ${Math.min(st.n,7)}/7 equipados</div>`+T.b.map(([n,b])=>`<div class="${st.n>=n?'on':''}" style="${st.n>=n?'color:'+T.c:''}">(${n}) ${setDesc(b)}</div>`).join('')+'<small>Bônus crescem com a raridade das peças equipadas</small></div>'}
 function upCost(it){return{f:(it.u+1)*RAR[it.r].fc,g:goldBase(Math.max(S.stage,5))*12*Math.pow(1.45,it.u)}}
-function openItem(it){openIt=it;it.nw=0;const R=RAR[it.r],sl=slotOf(it.s);$('iic').textContent=sl.ic;$('inm').textContent=it.nm+(it.u?' +'+it.u:'');$('inm').style.color=R.c;$('irr').innerHTML=`<span style="color:${R.c}">${R.n.toUpperCase()}</span> · ${sl.n} · nível do item ${it.il}`;
+function openItem(it){openIt=it;it.nw=0;const R=RAR[it.r],sl=slotOf(it.s);$('iic').innerHTML=icoImg(it,'icoL');$('inm').textContent=it.nm+(it.u?' +'+it.u:'');$('inm').style.color=R.c;$('irr').innerHTML=`<span style="color:${R.c}">${R.n.toUpperCase()}</span> · ${sl.n} · nível do item ${it.il}`;
 $('ist').innerHTML=Object.entries(it.st).map(([k,v],i)=>`<div class="${i?'':'p'}"><span>${STL[k]}</span><span style="color:${i?'#cfe':R.c}">+${fmtS(k,v*itemMul(it))}</span></div>`).join('')+`<div style="opacity:.6;font-size:11px"><span>Melhoria</span><span>+${it.u} / ${R.mx}</span></div>`+setBlock(it);
 const cur=eqItem(it.s),eq=isEq(it);if(!eq&&cur){const p=(itemScore(it)/itemScore(cur)-1)*100;$('icmp').innerHTML=`<span style="color:${p>=0?'#5aff8a':'#ff6a7a'}">${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(0)}% de poder vs equipado</span>`}else $('icmp').innerHTML=eq?'<span style="color:#9fe8ff">✔ Equipado</span>':'<span style="color:#5aff8a">▲ Espaço vazio — equipe!</span>';
 const c=upCost(it),mx=it.u>=R.mx;const ub=$('iup');ub.disabled=mx||S.frag<c.f||S.gold<c.g;ub.innerHTML=mx?'Melhoria máxima':`Melhorar +${it.u+1}<br><small>✨${fmt(c.f)} · 🪙${fmt(c.g)}</small>`;
@@ -1722,7 +1803,7 @@ chests.forEach((c,i)=>{c.t+=dt;const g=c.g;if(!c.open){g.scale.setScalar(c.s);co
 else{c.open+=dt;c.lid.rotation.x=-Math.min(1.9,c.open*7);if(c.beam){c.beam.material.opacity=Math.max(0,.7-c.open*.5);c.beam.scale.x=c.beam.scale.z=1+c.open*.6}if(c.open>1.3)g.scale.setScalar(Math.max(0,c.s*(1-(c.open-1.3)*4)))}});
 chests=chests.filter(c=>{if(c.open>1.55){sc.remove(c.g);if(c.beam)sc.remove(c.beam);return false}return true});
 // drops
-for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.t+=dt;d.gem.rotation.y+=dt*3;d.gem.position.y=.5+Math.sin(t*4)*.08;const fxOn=!!d.fx&&PFX.includes(d.fx);d.gem.visible=d.halo.visible=!fxOn;d.beam.visible=!d.fx&&d.r>=1&&!d.beam.userData.off;d.beam.material.opacity=.55+.25*Math.sin(t*6);
+for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.t+=dt;d.gem.rotation.y+=dt*3;d.gem.position.y=.55+Math.sin(t*4+d.r)*.08;d.halo.material.opacity=d.r>=3?.75+.25*Math.sin(t*5):.7;const fxOn=!!d.fx&&PFX.includes(d.fx);d.halo.visible=!fxOn;d.beam.visible=!d.fx&&d.r>=1&&!d.beam.userData.off;d.beam.material.opacity=.55+.25*Math.sin(t*6);
 if(d.t>1.4+d.r*.25){d.beam.visible=false;d.beam.userData.off=1;tmp.set(hero.position.x,1,hero.position.z).sub(d.g.position);tmp.y-=.5;const dd=tmp.length();d.g.position.addScaledVector(tmp.normalize(),Math.min(dd,(5+(d.t-1.4)*25)*dt));if(dd<.5){if(d.fx)d.fx.fx.stop();if(d.r>=2){const c=new THREE.Color(RAR[d.r].c);pfx('collectBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#'+c.clone().multiplyScalar(.3).getHexString(),'#'+c.getHexString(),'#ffffff']})}addItem(d.it);sc.remove(d.g);drops.splice(i,1);tone(880+d.r*150,.15,'triangle',.12)}}}
 // fúria
 if(furyT>0){furyT-=dt;fury=furyT/12*100;if(furyT<=0)fury=0}else fury=S.fk/FN()*100;

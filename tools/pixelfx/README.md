@@ -22,7 +22,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | monstro / elite / chefão derrotado | `spawn/poof` / `explosions/plasma-explosion` / a mesma em tons de fogo e maior |
 | chegada do chefão | `spawn/spawn-portal` |
 | fúria | `lightning/thunderclap` (com silhueta vazia, para não desenhar o boneco do pixelfx) |
-| qualquer item no chão / item raro coletado | `tools/pixelfx/fx/loot-aura.js` (versão própria do `pickups/loot-beam`: espada com brilho só em volta, sem coluna de luz) / `pickups/collect-burst`, na cor da raridade |
+| qualquer item no chão / item raro coletado | `tools/pixelfx/fx/loot-aura.js` com `sword:0` (só a poça, os anéis e os brilhos; o ícone em pixel art do próprio item, `itemIcon` no `index.html`, flutua por cima) / `pickups/collect-burst`, na cor da raridade |
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
 | baú (qualquer tier) | `pickups/chest-open` num cartão de notificação no canto inferior direito, com luz e madeira nas cores do tier (`chestPal`); o baú não cai mais no chão e a recompensa chega quando a tampa abre |
 | nova aura | `arcane/mana-burst` maior, nas cores da aura (sem coluna de luz) |
@@ -81,7 +81,7 @@ porque custava 8 ms em média, com picos de 45 ms.
   do herói vêm das trilhas `act` desses efeitos.
 
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
-para raridades altas), sem a coluna de luz.
+para raridades altas), sem a coluna de luz. Com `sword: 0` desenha só o brilho, sem a espada (é assim que o jogo usa).
 
 Nenhum efeito pode levantar ou derrubar coluna de luz sobre o herói ou os itens: `holy/smite`, `holy/holy-pillar`,
 `pickups/loot-beam` e `arcane/magic-circle-cast` ficaram de fora por isso, e `tests/headless/sem-feixes.js` confere.

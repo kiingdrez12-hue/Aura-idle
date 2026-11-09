@@ -2,6 +2,7 @@
 // Adaptado de pixelfx/src/fx/pickups/loot-beam.js (MIT, Patch e Hugo Duprez; ver vendor/PIXELFX-LICENSE.txt),
 // sem a coluna de luz que sobe e sem as partículas que voam para o alto.
 // Opção `power` (0 a 1): raridades altas ganham anéis um pouco maiores e mais brilhos.
+// Opção `sword` (1/0): com 0 desenha só o brilho; o jogo põe o ícone do próprio item por cima.
 import { fit, ease, cycle, band, WHITE, hex, mix } from "pixelfx";
 import { Layer, glint, pool, blobShadow } from "pixelfx/fx/pickups/_lib";
 
@@ -18,6 +19,7 @@ export const meta = {
   options: {
     palette: ["#140a24", "#2c1250", "#4b1d86", "#7330c0", "#a050f0", "#c890ff", "#ecd4ff", "#ffffff"],
     power: 0.5,
+    sword: 1,
     seed: 4,
   },
 };
@@ -76,8 +78,10 @@ export function drawBack(p, t, o) {
 
 export function draw(p, t, o) {
   const C = fit(o.palette, 8), T = meta.duration, ph = t / T;
-  blobShadow(p, OX - 0.5, 12.5, 0.95);
-  sword(p, C, ph);
+  if (o.sword) {
+    blobShadow(p, OX - 0.5, 12.5, 0.95);
+    sword(p, C, ph);
+  }
   for (let k = 0; k < RINGS.length; k++) ring(p, C, since(ph, k) * T, false, o.power);
   sparkles(p, C, t, T, o.seed, o.power);
 }
