@@ -14,5 +14,9 @@ module.exports={
   for(let i=0;i<600&&(chestQ.length||chestCur);i++){step(.05);if(i%4===0)found.push(...beams())}
   // itens de todas as raridades no chão
   for(let r=0;r<8;r++)dropItem(hero.position,r,S.stage);for(let i=0;i<10;i++){step(.05);found.push(...beams())}
-  return {found}}),
- check:r=>ok(r.found.length===0,'colunas de luz visiveis: '+r.found.slice(0,10).join(', '))};
+  // efeitos do pixelfx que são colunas de luz caindo ou subindo: nenhum pode aparecer em especial, nível ou aura nova
+  const COLUNAS=['smite','holyPillar','lootBeam','magicCircle'],usados=[];const _pfx=pfx;pfx=function(id,...a){if(COLUNAS.includes(id))usados.push(id);return _pfx(id,...a)};
+  for(const k of ['knight','mage','archer','paladin']){S.cls=k;buildHero();const e=spawnEnemy('slime');e.g.position.set(hero.position.x+1,0,hero.position.z);special();for(let i=0;i<30;i++)step(.05)}
+  addXp(xpNeed(S.lvl)*1.01);tierUp(Math.min(9,S.tier+1));for(let i=0;i<20;i++)step(.05);pfx=_pfx;
+  return {found,usados}}),
+ check:r=>{ok(r.found.length===0,'colunas de luz visiveis: '+r.found.slice(0,10).join(', '));ok(r.usados.length===0,'efeitos de coluna de luz no heroi: '+[...new Set(r.usados)].join(', '))}};

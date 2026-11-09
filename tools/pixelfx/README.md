@@ -17,7 +17,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | crítico do arqueiro | `lightning/chain-lightning` |
 | Chuva de Flechas (arqueiro) | `arcane/star-fall` dourado (as flechas 3D ficam só como dano) |
 | crítico do paladino | `melee/hammer-smash` |
-| Julgamento Divino (paladino) | `holy/smite` no lugar do cilindro 3D |
+| Julgamento Divino (paladino) | `fire/fire-ring` dourado: onda sagrada correndo pelo chão (sem raio vindo do alto) |
 | qualquer crítico | `impacts/crit-hit` |
 | monstro / elite / chefão derrotado | `spawn/poof` / `explosions/plasma-explosion` / a mesma em tons de fogo e maior |
 | chegada do chefão | `spawn/spawn-portal` |
@@ -25,7 +25,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | qualquer item no chão / item raro coletado | `tools/pixelfx/fx/loot-aura.js` (versão própria do `pickups/loot-beam`: espada com brilho só em volta, sem coluna de luz) / `pickups/collect-burst`, na cor da raridade |
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
 | baú (qualquer tier) | `pickups/chest-open` num cartão de notificação no canto inferior direito, com luz e madeira nas cores do tier (`chestPal`); o baú não cai mais no chão e a recompensa chega quando a tampa abre |
-| nova aura | `holy/holy-pillar` (nas cores da aura) |
+| nova aura | `arcane/mana-burst` maior, nas cores da aura (sem coluna de luz) |
 
 No código (`index.html`): `pfx(id, x, y, z, opções)` cria um efeito na posição do mundo; `pfxUpd(dt)` roda dentro
 de `step` e `pfxDraw()` desenha uma vez por quadro, antes de renderizar. Cada efeito é desenhado num canvas e mostrado
@@ -44,6 +44,9 @@ porque custava 8 ms em média, com picos de 45 ms.
 `tools/pixelfx/fx/` guarda efeitos adaptados para o jogo, importados por `entry.js` como os do pixelfx. Hoje:
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
 para raridades altas), sem a coluna de luz.
+
+Nenhum efeito pode levantar ou derrubar coluna de luz sobre o herói ou os itens: `holy/smite`, `holy/holy-pillar`,
+`pickups/loot-beam` e `arcane/magic-circle-cast` ficaram de fora por isso, e `tests/headless/sem-feixes.js` confere.
 
 O teste `tests/headless/efeitos-pixelfx.js` dispara cada situação do jogo e confere que **todo** efeito do pacote é
 criado e desenha pixels. Ao adicionar um efeito ao pacote, ligue-o no jogo, ou o teste falha.
