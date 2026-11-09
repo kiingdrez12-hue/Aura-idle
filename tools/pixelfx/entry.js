@@ -35,6 +35,20 @@ import * as mobSkull from "pixelfx/fx/critters/flying-skull";
 import * as mobEye from "pixelfx/fx/critters/eyeball";
 import * as mobWisp from "pixelfx/fx/critters/wisp";
 import * as mobJelly from "pixelfx/fx/critters/jellyfish";
+// habilidades dos heróis (index.html, SKILLS): só efeitos avulsos, sem colunas de luz
+import * as uppercut from "pixelfx/fx/melee/uppercut";
+import * as heavyCleave from "pixelfx/fx/melee/heavy-cleave";
+import * as groundSlam from "pixelfx/fx/impacts/ground-slam";
+import * as fireball from "pixelfx/fx/fire/fireball";
+import * as frostNova from "pixelfx/fx/ice/frost-nova";
+import * as fireTornado from "pixelfx/fx/fire/fire-tornado";
+import * as arrow from "pixelfx/fx/projectiles/arrow";
+import * as rootSnare from "pixelfx/fx/nature/root-snare";
+import * as thorns from "pixelfx/fx/nature/thorns";
+import * as tornado from "pixelfx/fx/nature/tornado";
+import * as divineShield from "pixelfx/fx/holy/divine-shield";
+import * as sunburst from "pixelfx/fx/holy/sunburst";
+import * as quake from "pixelfx/fx/nature/quake";
 
 window.PixelFX = {
   createFrame, clearFrame, createFx, composite, poseAt, READY,
@@ -42,5 +56,6 @@ window.PixelFX = {
     hitSpark, critHit, poof, plasmaExplosion, lootAura, aura, hero, manaBurst,
     swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, fireRing, spawnPortal, collectBurst, chestOpen,
     mobSlime, mobFrog, mobSnake, mobBat, mobGhost, mobSkull, mobEye, mobWisp, mobJelly,
+    uppercut, heavyCleave, groundSlam, fireball, frostNova, fireTornado, arrow, rootSnare, thorns, tornado, divineShield, sunburst, quake,
   },
 };

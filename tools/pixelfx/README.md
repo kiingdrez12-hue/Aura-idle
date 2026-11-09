@@ -74,6 +74,12 @@ porque custava 8 ms em média, com picos de 45 ms.
   os tipos slime, goblin e skeleton do jogo e o chefão; as cores giram com o bioma (`hue`). Os quadros de cada bicho
   são desenhados uma vez, a 12 qps, aos poucos (2 por chamada), e guardados (`MOB_CACHE`, até 15 conjuntos).
 
+- Habilidades (`SKILLS` no `index.html`, 4 por herói, liberadas nos níveis 1, 10, 25 e 50, na barra de habilidades):
+  usam `doubleSlash`, `uppercut`, `heavyCleave`, `groundSlam`, `hammerSmash` (pose), `fireball`, `plasmaExplosion`,
+  `frostNova`, `chainLightning`, `fireTornado`, `arrow`, `rootSnare`, `thorns`, `tornado`, `divineShield`, `sunburst` e
+  `quake`, todos avulsos (nada de `moves/*`, que desenham o boneco e o alvo de treino, nem colunas de luz). As poses
+  do herói vêm das trilhas `act` desses efeitos.
+
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
 para raridades altas), sem a coluna de luz.
 

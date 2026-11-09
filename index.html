@@ -234,6 +234,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
    direita, ele se centraliza no espaço à esquerda do cartão */
 #banner{top:auto!important;bottom:96px;padding:0 12px;transition:opacity .25s,transform .35s cubic-bezier(.2,1.6,.4,1),right .25s}
 #chestCard:not(.hidden)~#banner{right:122px}
+/* barra de habilidades: 4 botões e o AUTO, logo acima da fúria; lista de itens, cartão do baú e aviso sobem junto */
+.skbar{position:absolute;left:50%;transform:translateX(-50%);bottom:30px;display:flex;gap:6px;align-items:center;z-index:5}
+.skb{position:relative;width:46px;height:46px;border-radius:13px;background:rgba(8,9,18,.84);border:1.5px solid rgba(255,255,255,.16);padding:0;color:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.skb .ic{font-size:23px;line-height:1}
+.skb .cdo{position:absolute;inset:0;background:conic-gradient(rgba(0,0,0,.7) var(--p,0%),transparent 0);pointer-events:none}
+.skb .cdt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;text-shadow:0 1px 3px #000;pointer-events:none}
+.skb.rdy{border-color:var(--c);box-shadow:0 0 12px -3px var(--c),inset 0 0 8px -4px var(--c)}
+.skb.lock .ic{filter:grayscale(1);opacity:.45}.skb .lk{position:absolute;left:0;right:0;bottom:2px;font-size:9px;font-weight:900;text-align:center;color:#ffd966;text-shadow:0 1px 2px #000}
+.skauto{height:30px;padding:0 8px;border-radius:10px;background:rgba(8,9,18,.84);border:1.5px solid rgba(255,255,255,.16);color:rgba(255,255,255,.55);font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+.skauto.on{border-color:#5aff8a;color:#5aff8a}
+.loot{bottom:88px!important}.chestc{bottom:84px!important}#banner{bottom:146px}
 #banner .a{font-size:20px!important;line-height:1.1;overflow-wrap:anywhere}
 #banner .b{font-size:11px!important}
 #banner::before{content:'';position:absolute;left:8%;right:8%;top:-8px;bottom:-8px;background:radial-gradient(ellipse at center,rgba(5,6,14,.55),transparent 70%);z-index:-1}
@@ -280,6 +291,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
   <div class="stage"><div class="t cz" id="stg">ESTÁGIO 1</div><div class="w" id="world">Praça Esquecida</div><div class="sbar" id="sbar"><i id="sfill"></i></div><div class="bossl hidden" id="bossl">CHEFÃO · 30s</div></div>
   <div class="loot" id="loot"></div>
   <div class="chestc hidden" id="chestCard"><canvas id="chestCv" width="96" height="72"></canvas><div class="cn" id="chestN"></div><div class="cr" id="chestR"></div></div>
+  <div class="skbar" id="skbar"></div>
   <div class="fury" id="fury"><div class="l" id="furyl">FÚRIA · 0/30 ABATES</div><div class="fbar"><i id="ffill"></i></div></div>
   <div id="banner"><div class="a cz" id="ba"></div><div class="b" id="bb"></div></div>
  </div>
@@ -370,7 +382,7 @@ const $=id=>document.getElementById(id);
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td'];
 function fmt(n){if(!isFinite(n))return '∞';if(n<1000)return n<10&&n%1?n.toFixed(1):Math.floor(n)+'';const e=Math.floor(Math.log10(n)/3);let s;if(e<SUF.length)s=SUF[e];else{const k=e-SUF.length;s=String.fromCharCode(97+Math.floor(k/26)%26)+String.fromCharCode(97+k%26)}const v=n/Math.pow(1000,e);return(v<10?v.toFixed(2):v<100?v.toFixed(1):Math.floor(v))+s}
 // ===================== save =====================
-const DEF={wb:null,ss:null,ess:0,rel:{},ascStart:1,tal:{},gems:0,eggs:[0,0,0],pets:{},petActive:null,towerBest:0,towerTries:3,ach:{},boostUntil:0,life:{buys:0,ups:0,specials:0,floors:0},gfx:1,uport:['p_knight'],ubord:['bd_none'],port:'p_knight',bord:'bd_none',name:'Herói',chestsN:0,playT:0,auraLv:1,uacc:['h_none','b_default'],head:'h_none',back:'b_default',iv:2,cls:'knight',skin:'padrao',ucls:['knight'],uskin:['padrao'],gold:0,lvl:1,xp:0,stage:1,maxStage:1,best:1,kills:0,up:{dmg:0,spd:0,crit:0,gold:0,aura:0,spirit:0,xp:0},autoSal:[false,false,false,false,false,false,false,false],souls:0,asc:0,total:0,last:0,autobuy:false,gps:0,tier:0,muted:false,bosses:0,killsAll:0,items:[],eq:{},frag:0,fk:0,nid:1,found:0};
+const DEF={skAuto:true,wb:null,ss:null,ess:0,rel:{},ascStart:1,tal:{},gems:0,eggs:[0,0,0],pets:{},petActive:null,towerBest:0,towerTries:3,ach:{},boostUntil:0,life:{buys:0,ups:0,specials:0,floors:0},gfx:1,uport:['p_knight'],ubord:['bd_none'],port:'p_knight',bord:'bd_none',name:'Herói',chestsN:0,playT:0,auraLv:1,uacc:['h_none','b_default'],head:'h_none',back:'b_default',iv:2,cls:'knight',skin:'padrao',ucls:['knight'],uskin:['padrao'],gold:0,lvl:1,xp:0,stage:1,maxStage:1,best:1,kills:0,up:{dmg:0,spd:0,crit:0,gold:0,aura:0,spirit:0,xp:0},autoSal:[false,false,false,false,false,false,false,false],souls:0,asc:0,total:0,last:0,autobuy:false,gps:0,tier:0,muted:false,bosses:0,killsAll:0,items:[],eq:{},frag:0,fk:0,nid:1,found:0};
 let S=JSON.parse(JSON.stringify(DEF));
 try{const d=JSON.parse(localStorage.getItem('auraIdleSave1')||'null');if(d&&(typeof d!=='object'||typeof d.lvl!=='number'))throw new Error('save inválido');if(d){S=Object.assign(S,d);S.up=Object.assign({},DEF.up,d.up||{});S.items=d.items||[];S.eq=d.eq||{};if(!d.iv)S.iv=1;S.ucls=d.ucls||['knight'];S.uskin=d.uskin||['padrao'];S.uacc=d.uacc||['h_none','b_default'];S.uport=d.uport||['p_knight'];S.eggs=(d.eggs&&d.eggs.length===3)?d.eggs:[0,0,0];S.pets=d.pets||{};S.tal=d.tal||{};S.ach=d.ach||{};S.rel=d.rel||{};if(d.ess==null)S.ess=d.souls||0;S.life=Object.assign({buys:0,ups:0,specials:0,floors:0},d.life||{});S.ubord=d.ubord||['bd_none'];S.autoSal=(d.autoSal&&d.autoSal.length===8)?d.autoSal:DEF.autoSal.slice()}}catch(e){S=JSON.parse(JSON.stringify(DEF));try{const raw=localStorage.getItem('auraIdleSave1');if(raw)localStorage.setItem('auraIdleSave1_corrupt',raw)}catch(_){}setTimeout(()=>toast('Seu save não pôde ser lido. Use Restaurar backup no Perfil.'),4000)}
 // ===================== itens =====================
@@ -911,7 +923,7 @@ function pfx(id,x,y,z,o={}){const P=window.PixelFX;if(!P||!P.FX[id])return null;
 if(o.minor&&(lite||PFX.length>=PFX_MINOR))return null;while(PFX.length>=(lite?4:PFX_MAX))pfxKill(PFX.shift());
 const mod=P.FX[id],[w,h]=mod.meta.size,[ox,oy]=mod.meta.origin,op={x:ox,y:oy,seed:Math.random()*1e9|0,flip:!!o.flip};if(o.palette)op.palette=o.palette;if(o.accent)op.accent=o.accent;if(o.power!=null)op.power=o.power;if(o.actor)op.actor=o.actor;
 const fx=P.createFx(mod,op),key=w+'x'+h,R=(PFX_POOL[key]||[]).pop()||pfxRes(P,w,h,key),spr=R.spr,k=(o.scale||1)/PFX_PPU;
-spr.center.set(ox/w,1-oy/h);spr.scale.set(w*k,h*k,1);spr.position.set(x,y,z);spr.renderOrder=20;spr.visible=false;sc.add(spr);
+spr.center.set(ox/w,1-oy/h);spr.scale.set(w*k,h*k,1);spr.position.set(x,y,z);spr.renderOrder=20;R.mat.rotation=0;spr.visible=false;sc.add(spr);
 const e={fx,R,fr:R.fr,img:R.img,cx:R.cx,tex:R.tex,mat:R.mat,spr,life:o.life||1e9,follow:o.follow,acc:1,hz:o.hz||0};PFX.push(e);return e}
 // canvas, textura, sprite e buffers são reaproveitados entre efeitos do mesmo tamanho: criar e descartar texturas
 // a cada efeito pesa na placa de vídeo do celular e gera pausas do coletor de lixo
@@ -971,7 +983,7 @@ function heroTrack(kind){const F=window.PixelFX.FX,k=S.cls;
  if(k==='knight')return[F.swordSlash.act.poses,-.3,.58];if(k==='paladin')return[F.hammerSmash.act.poses,-.44,kind==='sp'?1.02:.62];
  if(k==='mage')return[F.arcaneMissiles.act.poses,-.24,kind==='sp'?1.2:.5];return kind==='sp'?[BOW_UP,0,.6]:[BOW_TRACK,0,.45]}
 // golpe: kind 'atk' cabe no intervalo de ataque (acelera se precisar); 'sp' o especial; 'spin' gira enquanto durar
-function heroAnim(kind,dur){if(!HERO2D.fx)return;const [tr,a,b]=heroTrack(kind),span=b-a;HERO2D.anim={tr,a,b,t:0,sp:kind==='atk'?Math.max(1,span/Math.max(.2,dur*.9)):1,loop:kind==='spin'?dur:0,x0:(tr[0][1].x||0)}}
+function heroAnim(kind,dur){if(!HERO2D.fx||kind==='atk'&&HERO2D.anim&&HERO2D.anim.pri)return;const [tr,a,b]=heroTrack(kind),span=b-a;HERO2D.anim={tr,a,b,t:0,sp:kind==='atk'?Math.max(1,span/Math.max(.2,dur*.9)):1,loop:kind==='spin'?dur:0,x0:(tr[0][1].x||0)}}
 function heroPose(dt){const w=HWP[S.cls]||HWP.knight,A=HERO2D.anim,P=window.PixelFX;
  if(A){A.t+=dt*A.sp;let tt=A.a+A.t;if(A.loop){A.loop-=dt;tt=A.a+(A.t%(A.b-A.a));if(A.loop<=0)HERO2D.anim=null}else if(tt>=A.b)HERO2D.anim=null;
   const q={...P.poseAt(A.tr,Math.min(tt,A.b))},dx=(q.x||0)-A.x0,dy=q.y||0;delete q.x;delete q.y;q.ghost=0;return{q,dx,dy}}
@@ -1028,7 +1040,7 @@ if(e.tw){if(e.boss)S.bosses++;towerKill(e)}else if(e.boss){bossOn=false;S.bosses
 else if(!bossOn){S.kills=Math.min(10,S.kills+1)}}
 function addXp(x){S.xp+=x;let up=0;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up++}if(up){SFX.lvl();burst(hero.position.x,.2,hero.position.z,70,0xffd966,5,5);pfx('manaBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#3a1d00','#a8650b','#ffd966','#fff6c8']});num(hero.position,'NÍVEL '+S.lvl+'!','#ffd966',22,2.3);const ti=tierOf(S.lvl);if(ti>S.tier){S.tier=ti;tierUp(ti)}}}
 function tierUp(i){applyTier(i);checkProfile(false);renderAvatar();SFX.tier();flashScreen(.9);shake=.7;shockT=0;shockR=7;shockP.copy(hero.position);for(let k=0;k<4;k++)burst(hero.position.x,1,hero.position.z,90,k%2?C0:C1,8,8,.5);pfx('manaBurst',hero.position.x,0,hero.position.z,{scale:1.6,follow:hero.position,palette:auraPal()});banner('AURA '+TIERS[i].n.toUpperCase()+'!','Toque em 📣 para compartilhar',TIERS[i].css);$('share').style.boxShadow='0 0 18px var(--c)'}
-function attack(){const C=CLS();atkT=atkIv();swingT=.22;heroAnim('atk',atkT);const L=S.up.crit,c=Math.random()<critC(L),d=dmg()*(c?critM(L):1)*(furyT>0?1.5:1);if(c)shake=Math.max(shake,.12);
+function attack(){const C=CLS();atkT=atkIv();swingT=.22;heroAnim('atk',atkT);const L=S.up.crit,c=Math.random()<critC(L),d=dmg()*(c?critM(L):1)*(furyT>0?1.5:1)*(skBuffT>0?1.5:1);if(c)shake=Math.max(shake,.12);
 if(C.rng){if(c&&S.cls==='mage')pfx('arcaneMissiles',hero.position.x,0,hero.position.z,{scale:PFX_BODY,flip:leftOf(hero.position,target.g.position),palette:auraPal()});fireShot(target,d,c);if(S.cls==='archer'){tone(900,.06,'triangle',.05,.6);if(Math.random()<.18){const tg=target;setTimeout(()=>{if(tg&&!tg.dead)fireShot(tg,d,false)},90)}}else tone(420,.15,'sine',.08,2);return}
 SFX.hit(c);arcPiv.position.copy(hero.position);arcPiv.rotation.y=face-Math.PI/2;
 {const q=target.g.position,fl=leftOf(hero.position,q);if(S.cls==='paladin'){if(c)pfx('hammerSmash',q.x,0,q.z,{scale:PFX_BODY,flip:fl})}else pfx(c?'doubleSlash':'swordSlash',hero.position.x,0,hero.position.z,{scale:PFX_BODY,flip:fl,minor:!c})}
@@ -1037,6 +1049,96 @@ if(S.cls==='paladin'){holyT=0;holy.position.set(hero.position.x,.1,hero.position
 const fx=Math.sin(face),fz=Math.cos(face);enemies.forEach(e=>{if(e===target||e.dead)return;const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,dd=Math.hypot(dx,dz)||.01;if(dd-e.T.r<1.9&&(dx*fx+dz*fz)/dd>.3)hit(e,d*.5,false,2)})}
 function special(){spT=spCdAt(S.up.aura);LF().specials++;const d=spDmgAt(S.up.aura)*(furyT>0?1.5:1),k=S.cls;pL.intensity=14;SFX.boom();burst(hero.position.x,.3,hero.position.z,50,C1,5,2,.4);
 heroAnim(k==='knight'?'spin':'sp',1.2);if(k==='knight'){spinT=1.2;spinTick=0;spinD=d;shake=.2}else if(k==='mage'){meteorSpec(d);shake=.15}else if(k==='archer'){rainSpec(d)}else{judgeSpec(d);shake=.5}}
+// ===================== habilidades: 4 por herói, liberadas pelo nível, na barra de habilidades =====================
+// Disparam sozinhas quando a recarga acaba e há inimigo no alcance (botão AUTO), ou na hora com um toque no botão.
+// Dano em múltiplos do golpe normal (skD), com fúria e Escudo Divino somando. Efeitos avulsos do pixelfx, sem colunas.
+const SK_LV=[1,10,25,50];
+let skCd=[0,0,0,0],skGap=0,skBuffT=0,skUiT=0;const skQ=[],skProj=[],skZones=[];
+const skD=m=>dmg()*m*(furyT>0?1.5:1)*(skBuffT>0?1.5:1);
+const skLive=()=>enemies.filter(e=>!e.dead&&e.g.parent);
+const skIn=(x,z,r)=>skLive().filter(e=>Math.hypot(e.g.position.x-x,e.g.position.z-z)-e.T.r<r);
+function skAoe(x,z,r,m,kb,fn){const L=skIn(x,z,r);L.forEach(e=>{hit(e,skD(m),false,kb||0,'sk');if(fn&&!e.dead)fn(e)});return L.length}
+// os desenhos do pixelfx apontam para a direita: espelha quando o alvo fica à esquerda do herói na tela
+const skFlip=(x,z)=>tmp2.set(x,0,z).project(cam).x<tmp.copy(hero.position).project(cam).x;
+function skFace(t){tmp.copy(t.g.position).sub(hero.position);face=Math.atan2(tmp.x,tmp.z)}
+const skLater=(t,fn)=>skQ.push({t,fn});
+// pose do herói durante a habilidade, com prioridade sobre o golpe normal
+function heroAnimT(tr,a,b,sp=1){if(!HERO2D.fx||!tr)return;HERO2D.anim={tr,a,b,t:0,sp,loop:0,x0:(tr[0][1].x||0),pri:1}}
+const FXA=k=>window.PixelFX&&window.PixelFX.FX[k]&&window.PixelFX.FX[k].act?window.PixelFX.FX[k].act.poses:null;
+// projétil: o sprite voa do herói na direção do alvo; acerta o primeiro (ou todos no caminho, se atravessa)
+function skShoot(id,t,o){const h=hero.position,dx=t.g.position.x-h.x,dz=t.g.position.z-h.z,d=Math.hypot(dx,dz)||1;
+ const a=tmp.copy(h).project(cam),b=tmp2.copy(t.g.position).project(cam),fl=b.x<a.x,ang=Math.atan2((b.y-a.y)/cam.aspect,b.x-a.x);
+ const e=pfx(id,h.x,1,h.z,{flip:fl,scale:o.scale||1});if(e)e.mat.rotation=fl?ang-Math.PI:ang;
+ skProj.push({e,x:h.x,z:h.z,vx:dx/d*o.v,vz:dz/d*o.v,left:o.len||d+.4,hit:new Set(),o})}
+// zona: dano em pulsos num lugar por um tempo (e puxa para o centro, se pull)
+function skZone(x,z,o){skZones.push({x,z,t:0,tick:0,...o})}
+const SKILLS={
+ knight:[
+  {n:'Corte Cruzado',ic:'⚔️',cd:7,r:2.6,d:'Dois cortes cruzados no alvo e em quem estiver do lado',go(t){skFace(t);heroAnimT(FXA('doubleSlash'),-.18,.5);const x=t.g.position.x,z=t.g.position.z;
+   pfx('doubleSlash',hero.position.x,0,hero.position.z,{flip:skFlip(x,z),scale:1.2});skAoe(x,z,1.5,1.4,1);skLater(.16,()=>skAoe(x,z,1.5,1.4,1.5))}},
+  {n:'Golpe Ascendente',ic:'🌙',cd:10,r:2.4,d:'Um golpe de baixo para cima que atordoa o alvo por 1,5 s',go(t){skFace(t);heroAnimT(FXA('uppercut'),-.2,.6);
+   pfx('uppercut',t.g.position.x,0,t.g.position.z,{flip:skFlip(t.g.position.x,t.g.position.z),scale:1.2});hit(t,skD(3.2),true,2,'sk');t.stunT=1.5}},
+  {n:'Talho Flamejante',ic:'🔥',cd:15,r:3,d:'Um arco de fogo que racha o chão à frente e acerta todos ali',go(t){skFace(t);heroAnimT(FXA('heavyCleave'),-.5,.7);const h=hero.position,x=(h.x+t.g.position.x)/2,z=(h.z+t.g.position.z)/2;
+   pfx('heavyCleave',h.x,0,h.z,{flip:skFlip(t.g.position.x,t.g.position.z),scale:1.3});skLater(.12,()=>skAoe(x,z,2.4,3.6,2.5))}},
+  {n:'Impacto Sísmico',ic:'💥',cd:32,r:4,d:'Suprema: salta e cai com tudo, onda de choque em volta que atordoa por 2 s',go(t){heroAnimT(FXA('hammerSmash'),-.5,.8);const h=hero.position;
+   skLater(.15,()=>{pfx('groundSlam',h.x,0,h.z,{scale:1.1});shake=.6;skAoe(h.x,h.z,4.5,7,3,e=>e.stunT=2)})}}],
+ mage:[
+  {n:'Bola de Fogo',ic:'☄️',cd:6,r:8,d:'Uma bola de fogo que explode no primeiro inimigo, queimando quem estiver perto',go(t){skFace(t);heroAnimT(FXA('arcaneMissiles'),-.24,.2);
+   skShoot('fireball',t,{v:14,scale:1,hit(p,e){const x=p.x,z=p.z;pfx('plasmaExplosion',x,0,z,{scale:.8,minor:1});skAoe(x,z,1.8,2.6,2)}})}},
+  {n:'Nova de Gelo',ic:'❄️',cd:12,r:3.5,d:'Uma onda de gelo em volta: acerta todos perto e deixa lentos por 3 s',go(t){heroAnimT(FXA('frostNova'),0,.6);const h=hero.position;
+   pfx('frostNova',h.x,0,h.z,{scale:1.1});skLater(.3,()=>skAoe(h.x,h.z,3.6,2.4,1.5,e=>e.slowT=3))}},
+  {n:'Corrente de Raios',ic:'⚡',cd:14,r:8,d:'Um raio que pula do alvo para até mais 3 inimigos',go(t){skFace(t);heroAnimT(FXA('chainLightning'),-.2,.5);
+   pfx('chainLightning',hero.position.x,0,hero.position.z,{flip:skFlip(t.g.position.x,t.g.position.z),scale:1});let cur=t;const done=new Set();
+   for(let i=0;i<4&&cur;i++){const e=cur;done.add(e);skLater(.12+i*.08,()=>{if(!e.dead)hit(e,skD(2.8),false,1,'sk')});
+    let nb=null,bd=6;skLive().forEach(o=>{if(done.has(o))return;const d=o.g.position.distanceTo(e.g.position);if(d<bd){bd=d;nb=o}});cur=nb}}},
+  {n:'Tornado de Fogo',ic:'🌪️',cd:30,r:8,d:'Suprema: um tornado de fogo no alvo que queima tudo em volta por 2 s',go(t){skFace(t);heroAnimT(FXA('arcaneMissiles'),-.24,.5);const x=t.g.position.x,z=t.g.position.z;
+   const e=pfx('fireTornado',x,0,z,{scale:1.6});skZone(x,z,{dur:2,r:2.6,every:.25,m:1.2,pull:1.5,e})}}],
+ archer:[
+  {n:'Flecha Perfurante',ic:'🏹',cd:6,r:9,d:'Uma flecha que atravessa todos em linha',go(t){skFace(t);heroAnimT(BOW_TRACK,0,.45,1.4);
+   skLater(.18,()=>{if(!t.g.parent)return;skShoot('arrow',t,{v:22,len:11,pierce:1,scale:1.2,hit(p,e){hit(e,skD(2.6),false,1.5,'sk')}})})}},
+  {n:'Raízes',ic:'🌿',cd:12,r:9,d:'Raízes prendem o alvo e quem estiver perto por 3 s',go(t){skFace(t);heroAnimT(BOW_TRACK,0,.45);const x=t.g.position.x,z=t.g.position.z;
+   skIn(x,z,2).slice(0,4).forEach(e=>{pfx('rootSnare',e.g.position.x,0,e.g.position.z,{scale:1,minor:e!==t});hit(e,skD(1.5),false,0,'sk');e.rootT=3})}},
+  {n:'Espinhos',ic:'🌵',cd:14,r:7,d:'Espinhos brotam do chão numa linha até o alvo',go(t){skFace(t);heroAnimT(BOW_TRACK,0,.45);const h=hero.position,dx=t.g.position.x-h.x,dz=t.g.position.z-h.z,d=Math.hypot(dx,dz)||1;
+   pfx('thorns',h.x+dx/d*.6,0,h.z+dz/d*.6,{flip:skFlip(t.g.position.x,t.g.position.z),scale:1.3});
+   for(let k=0;k<4;k++){const s=1+k*1.6;skLater(.1+k*.12,()=>skAoe(h.x+dx/d*s,h.z+dz/d*s,1.3,1.2,1))}}},
+  {n:'Tornado',ic:'🌀',cd:30,r:9,d:'Suprema: um tornado no alvo que puxa e fere os inimigos por 2 s',go(t){skFace(t);heroAnimT(BOW_UP,0,.6);const x=t.g.position.x,z=t.g.position.z;
+   const e=pfx('tornado',x,0,z,{scale:1.2});skZone(x,z,{dur:2,r:3.2,every:.25,m:1.1,pull:4,e})}}],
+ paladin:[
+  {n:'Martelo Sagrado',ic:'🔨',cd:7,r:2.6,d:'Uma martelada que racha o chão em volta do alvo',go(t){skFace(t);heroAnimT(FXA('hammerSmash'),-.44,.5);const x=t.g.position.x,z=t.g.position.z;
+   skLater(.15,()=>{pfx('groundSlam',x,0,z,{scale:.7,minor:1});skAoe(x,z,2,2.8,2)})}},
+  {n:'Escudo Divino',ic:'🛡️',cd:18,r:5,d:'Uma bolha de luz: +50% de dano por 6 s',go(t){heroAnimT(FXA('hammerSmash'),-.44,-.2);skBuffT=6;pfx('divineShield',hero.position.x,0,hero.position.z,{scale:1.6,follow:hero.position,life:6});SFX.buy()}},
+  {n:'Explosão Solar',ic:'☀️',cd:15,r:3.5,d:'Um sol em volta do paladino queima todos perto',go(t){heroAnimT(FXA('hammerSmash'),-.44,.6);const h=hero.position;
+   pfx('sunburst',h.x,1.2,h.z,{scale:1.2,life:1.4,follow:h});for(let k=0;k<3;k++)skLater(.15+k*.3,()=>skAoe(h.x,h.z,3.6,1.4,1))}},
+  {n:'Fenda Sagrada',ic:'⛰️',cd:32,r:4,d:'Suprema: o chão se abre à frente, acerta tudo e atordoa por 2 s',go(t){skFace(t);heroAnimT(FXA('hammerSmash'),-.44,.8);const h=hero.position,x=(h.x+t.g.position.x)/2,z=(h.z+t.g.position.z)/2;
+   skLater(.15,()=>{pfx('quake',x,0,z,{flip:skFlip(t.g.position.x,t.g.position.z),scale:1.4});shake=.6;skAoe(x,z,4,7,2.5,e=>e.stunT=2)})}}]};
+const skList=()=>SKILLS[S.cls]||SKILLS.knight;
+const skOpen=i=>S.lvl>=SK_LV[i];
+// lança a habilidade i no alvo mais perto dentro do alcance; devolve se lançou
+function skCast(i,manual){const sk=skList()[i];if(!sk||!skOpen(i)||skCd[i]>0)return false;
+ let t=target&&!target.dead&&target.g.parent?target:null;const inRange=e=>e&&e.g.position.distanceTo(hero.position)-e.T.r<=sk.r;
+ if(!inRange(t)){t=null;let bd=1e9;skLive().forEach(e=>{const d=e.g.position.distanceTo(hero.position)-e.T.r;if(d<=sk.r&&d<bd){bd=d;t=e}})}
+ if(!t)return false;sk.go(t);skCd[i]=sk.cd;skGap=.6;LF().specials++;SFX.hit(true);skUi(true);return true}
+function skStep(dt){skBuffT=Math.max(0,skBuffT-dt);for(let i=0;i<4;i++)skCd[i]=Math.max(0,skCd[i]-dt);
+ for(let i=skQ.length-1;i>=0;i--){skQ[i].t-=dt;if(skQ[i].t<=0){const f=skQ[i].fn;skQ.splice(i,1);f()}}
+ for(let i=skProj.length-1;i>=0;i--){const p=skProj[i],st=Math.hypot(p.vx,p.vz)*dt;p.x+=p.vx*dt;p.z+=p.vz*dt;p.left-=st;if(p.e)p.e.spr.position.set(p.x,1,p.z);let end=p.left<=0;
+  for(const e of skLive()){if(p.hit.has(e))continue;if(Math.hypot(e.g.position.x-p.x,e.g.position.z-p.z)<e.T.r+.35){p.hit.add(e);p.o.hit(p,e);if(!p.o.pierce){end=true;break}}}
+  if(end){if(p.e){p.e.life=0}skProj.splice(i,1)}}
+ for(let i=skZones.length-1;i>=0;i--){const z=skZones[i];z.t+=dt;z.tick-=dt;
+  if(z.pull)skIn(z.x,z.z,z.r+1).forEach(e=>{const dx=z.x-e.g.position.x,dz=z.z-e.g.position.z,d=Math.hypot(dx,dz);if(d>.3){e.g.position.x+=dx/d*z.pull*dt;e.g.position.z+=dz/d*z.pull*dt}});
+  if(z.tick<=0){z.tick=z.every;skAoe(z.x,z.z,z.r,z.m,0)}if(z.t>=z.dur)skZones.splice(i,1)}
+ skGap-=dt;if(S.skAuto&&skGap<=0&&!opening)for(let i=0;i<4;i++)if(skOpen(i)&&skCd[i]<=0&&skCast(i,false))break;
+ skUiT-=dt;if(skUiT<=0){skUiT=.1;skUi(false)}}
+// ---- a barra
+let skSig='';
+function skBar(){const box=$('skbar');if(!box)return;const L=skList();skSig=S.cls+'|'+SK_LV.filter(l=>S.lvl>=l).length;
+ box.innerHTML=L.map((s,i)=>`<button class="skb" data-i="${i}" aria-label="${s.n}"><span class="ic">${s.ic}</span><i class="cdo"></i><b class="cdt"></b>${skOpen(i)?'':`<b class="lk">Nv ${SK_LV[i]}</b>`}</button>`).join('')+`<button class="skauto" id="skauto">AUTO</button>`;
+ box.querySelectorAll('.skb').forEach(b=>b.onclick=()=>{audioInit();const i=+b.dataset.i,s=L[i];if(!skOpen(i)){toast('🔒 '+s.n+' · libera no nível '+SK_LV[i]+' — '+s.d);return}
+  if(skCd[i]>0){toast(s.ic+' '+s.n+' · pronta em '+Math.ceil(skCd[i])+' s');return}if(!skCast(i,true))toast(s.ic+' '+s.n+' · nenhum inimigo no alcance')});
+ $('skauto').onclick=()=>{S.skAuto=!S.skAuto;skUi(true);toast(S.skAuto?'Habilidades no automático':'Habilidades só no toque');save()};skUi(true)}
+function skUi(force){const box=$('skbar');if(!box)return;if(skSig!==S.cls+'|'+SK_LV.filter(l=>S.lvl>=l).length){skBar();return}
+ const L=skList();box.querySelectorAll('.skb').forEach(b=>{const i=+b.dataset.i,op=skOpen(i),cd=skCd[i],p=op&&cd>0?cd/L[i].cd:op?0:1;
+  b.style.setProperty('--p',(p*100).toFixed(1)+'%');b.classList.toggle('lock',!op);b.classList.toggle('rdy',op&&cd<=0);b.querySelector('.cdt').textContent=op&&cd>0?Math.ceil(cd):''});
+ const a=$('skauto');if(a)a.classList.toggle('on',!!S.skAuto)}
 function tapAttack(x,y){audioInit();const r=rd.domElement.getBoundingClientRect();let best=null,bd=75;
 chests.forEach(c=>{if(c.open)return;const v=c.g.position.clone().add(new THREE.Vector3(0,.3,0)).project(cam),d=Math.hypot((v.x+1)/2*r.width-x,(1-v.y)/2*r.height-y);if(d<bd){bd=d;best=c}});
 if(best){best.prio=1;toast('Seu herói vai abrir esse baú');return}
@@ -1510,7 +1612,7 @@ function renderTalPg(){renderTal();renderTalHd();const D=['DOM','SEG','TER','QUA
 // ===================== loop =====================
 let t=0,last=performance.now(),uiT=0,saveT=0,abT=0,secT=0;
 const tmp=new THREE.Vector3(),camT=new THREE.Vector3(),lookT=new THREE.Vector3();
-function step(dt){MOB_BUDGET.n=2;t+=dt;pfxUpd(dt);auraUpd(dt);if(!tower.on)updChest(dt);
+function step(dt){MOB_BUDGET.n=2;skStep(dt);t+=dt;pfxUpd(dt);auraUpd(dt);if(!tower.on)updChest(dt);
 // spawn
 if(tower.on){if(tower.wb)updWB(dt);else updTower(dt)}else{
 const alive=enemies.filter(e=>!e.dead&&!e.boss).length,want=Math.min(8,4+Math.floor(S.stage/6));
@@ -1548,7 +1650,10 @@ ag.attributes.position.needsUpdate=true;ag.attributes.color.needsUpdate=true;
 if(shockT<.6){shockT+=dt;shocks.forEach((s,i)=>{const k=Math.min(1,(shockT-i*.08)/.45);if(k<0){s.material.opacity=0;return}s.position.set(shockP.x,.08+i*.02,shockP.z);s.scale.setScalar(.3+k*shockR);s.material.opacity=(1-k)*.95})}else shocks.forEach(s=>s.material.opacity=0);
 // inimigos
 enemies.forEach(e=>{const g=e.g;if(e.dead){e.dt+=dt;const k=Math.min(1,e.dt/.3);g.scale.setScalar((e.elite?1.18:e.mega?1.35:1)*(1-k));return}
-const dx=hero.position.x-g.position.x,dz=hero.position.z-g.position.z,d=Math.hypot(dx,dz)||.01;let vx=0,vz=0;if(d>e.T.r+.6){vx=dx/d*e.T.spd;vz=dz/d*e.T.spd}
+const dx=hero.position.x-g.position.x,dz=hero.position.z-g.position.z,d=Math.hypot(dx,dz)||.01;let vx=0,vz=0;
+// habilidades: atordoado ou preso não anda, lento anda a menos da metade
+if(e.stunT>0)e.stunT-=dt;if(e.rootT>0)e.rootT-=dt;if(e.slowT>0)e.slowT-=dt;const mv=e.stunT>0||e.rootT>0?0:e.slowT>0?.45:1;
+if(d>e.T.r+.6){vx=dx/d*e.T.spd*mv;vz=dz/d*e.T.spd*mv}
 enemies.forEach(o=>{if(o===e||o.dead)return;const ox=g.position.x-o.g.position.x,oz=g.position.z-o.g.position.z,od=Math.hypot(ox,oz),mn=e.T.r+o.T.r;if(od<mn&&od>0){vx+=ox/od*(mn-od)*6;vz+=oz/od*(mn-od)*6}});
 g.position.x+=(vx+e.kb.x)*dt;g.position.z+=(vz+e.kb.z)*dt;e.kb.multiplyScalar(Math.max(0,1-dt*7));const r=Math.hypot(g.position.x,g.position.z);if(r>12.2){g.position.x*=12.2/r;g.position.z*=12.2/r}
 if(e.px)mobUpd(e,t);else{g.rotation.y=Math.atan2(dx,dz);if(e.type==='slime'){const b=g.userData.body,s=Math.sin(t*8+e.ph);b.scale.set(1+s*.08,.72-s*.1,1+s*.08);g.position.y=Math.max(0,s)*.12}else{g.position.y=Math.abs(Math.sin(t*9+e.ph))*.05;g.rotation.z=Math.sin(t*9+e.ph)*.05}}
