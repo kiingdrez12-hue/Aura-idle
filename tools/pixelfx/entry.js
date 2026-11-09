@@ -25,11 +25,22 @@ import * as fireRing from "pixelfx/fx/fire/fire-ring";
 import * as spawnPortal from "pixelfx/fx/spawn/spawn-portal";
 import * as collectBurst from "pixelfx/fx/pickups/collect-burst";
 import * as chestOpen from "pixelfx/fx/pickups/chest-open";
+// monstros: os bichos animados do pixelfx, um trio por cenário (index.html, MOBS e BIOMES)
+import * as mobSlime from "pixelfx/fx/critters/slime";
+import * as mobFrog from "pixelfx/fx/critters/frog";
+import * as mobSnake from "pixelfx/fx/critters/snake";
+import * as mobBat from "pixelfx/fx/critters/bat";
+import * as mobGhost from "pixelfx/fx/critters/ghost";
+import * as mobSkull from "pixelfx/fx/critters/flying-skull";
+import * as mobEye from "pixelfx/fx/critters/eyeball";
+import * as mobWisp from "pixelfx/fx/critters/wisp";
+import * as mobJelly from "pixelfx/fx/critters/jellyfish";
 
 window.PixelFX = {
   createFrame, clearFrame, createFx, composite, poseAt, READY,
   FX: {
     hitSpark, critHit, poof, plasmaExplosion, lootAura, aura, hero, manaBurst,
     swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, fireRing, spawnPortal, collectBurst, chestOpen,
+    mobSlime, mobFrog, mobSnake, mobBat, mobGhost, mobSkull, mobEye, mobWisp, mobJelly,
   },
 };

@@ -36,6 +36,10 @@ module.exports={
   // aura do herói: efeito próprio fora do pfx, nas duas camadas
   applyTier(3);for(let i=0;i<6;i++)step(.05);AURA.acc=1;auraDraw();seen.aura=1;
   for(const q of AURA.parts){const d=q.img.data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.aura=1;break}}
+  // monstros: os bichos do pixelfx vestem os inimigos de cada cenário (todos os biomas, os três tipos e o chefão)
+  for(let st=1;st<=BIOMES.length;st++){S.stage=st;for(const ty of ['slime','goblin','skeleton','boss']){const e=spawnEnemy(ty);if(!e.px)continue;const id=MOBS[e.px.id].fx;seen[id]=1;
+   for(let i=0;i<4;i++)mobUpd(e,i/MOB_FPS);const cv=e.px.sh.tex[0].image,d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew[id]=1;break}
+   sc.remove(e.g);enemies.splice(enemies.indexOf(e),1)}}
   // herói em pixel art: também fora do pfx, um sprite próprio nos pés
   if(HERO2D.fx){seen.hero=1;HERO2D.acc=1;heroDraw(.05);const d=HERO2D.part.img.data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.hero=1;break}}
   pfx=_pfx;
