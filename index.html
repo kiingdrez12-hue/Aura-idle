@@ -815,7 +815,8 @@ return{g,lid,h,ti,t:0,open:0,s:.85+ti*.1}}
 function spawnStageChests(){const list=[];[[0,1],[1,.5],[2,.2],[3,.06],[4,.015],[5,.004]].forEach(([ti,p])=>{if(Math.random()<p)list.push(ti)});if(S.stage%10===0)list.push(2);if(EV().chest)list.push(Math.random()<.3?1:0);if(S.stage%25===0)list.push(3);if(S.stage%50===0)list.push(4);
 let best=-1;list.forEach(ti=>{if(chests.filter(c=>!c.open).length>=5)return;const c=makeChest(ti);let x,z,k=0;do{const a=Math.random()*6.283,r=3+Math.random()*7.5;x=Math.cos(a)*r;z=Math.sin(a)*r;k++}while(k<12&&chests.some(o=>Math.hypot(o.g.position.x-x,o.g.position.z-z)<1.7));c.g.position.set(x,3,z);c.g.rotation.y=Math.random()*6.28;sc.add(c.g);chests.push(c);best=Math.max(best,ti)});
 if(best>=2)setTimeout(()=>{banner(CH[best].n.toUpperCase()+'!','Apareceu no mapa',CH[best].css);if(best>=3)SFX.chest()},1200)}
-function openChest(c,tapped){if(c.open)return;c.open=.001;S.chestsN++;const bm=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,6,18,1,true),new THREE.MeshBasicMaterial({color:CH[c.ti].glow,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.7}));bm.position.set(c.g.position.x,3,c.g.position.z);sc.add(bm);c.beam=bm;const C=CH[c.ti];SFX.chest();const g=goldBase(S.stage)*C.gold*goldM();dropCoins(c.g.position,g,12+c.ti*6);
+function openChest(c,tapped){if(c.open)return;c.open=.001;S.chestsN++;// sem coluna de luz ao abrir: o baú solta só partículas e os itens com o brilho da raridade em volta
+const C=CH[c.ti];SFX.chest();const g=goldBase(S.stage)*C.gold*goldM();dropCoins(c.g.position,g,12+c.ti*6);
 const fr=Math.ceil(C.frag*(1+S.stage*.05));S.frag+=fr;burst(c.g.position.x,.6,c.g.position.z,40+c.ti*30,C.glow,3+c.ti,6);num(c.g.position,'+'+fmt(g),'#ffd966',16,1.4);
 for(let i=0;i<C.items;i++)setTimeout(()=>dropItem(c.g.position,rollR(C.w),S.stage),250+i*280);
 if(c.ti>=2){shake=.25+c.ti*.08;flashScreen(.15+c.ti*.08)}if(tapped)feed('📦 '+C.n+' aberto!',C.css);invDirty=true}
