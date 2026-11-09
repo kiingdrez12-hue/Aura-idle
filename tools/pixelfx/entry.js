@@ -1,6 +1,6 @@
 // Ponto de entrada do pacote do pixelfx usado pelo Aura Idle.
 // Gera vendor/pixelfx.js (IIFE, expõe window.PixelFX). Veja tools/pixelfx/README.md.
-import { createFrame, clearFrame, createFx, composite } from "pixelfx";
+import { createFrame, clearFrame, createFx, composite, poseAt, READY } from "pixelfx";
 import * as hitSpark from "pixelfx/fx/impacts/hit-spark";
 import * as critHit from "pixelfx/fx/impacts/crit-hit";
 import * as poof from "pixelfx/fx/spawn/poof";
@@ -9,6 +9,8 @@ import * as plasmaExplosion from "pixelfx/fx/explosions/plasma-explosion";
 import * as lootAura from "./fx/loot-aura.js";
 // auras do herói: 10 estilos próprios em volta do corpo
 import * as aura from "./fx/aura.js";
+// os heróis em pixel art: o esqueleto do pixelfx vestido por classe
+import * as hero from "./fx/hero.js";
 import * as manaBurst from "pixelfx/fx/arcane/mana-burst";
 import * as swordSlash from "pixelfx/fx/melee/sword-slash";
 import * as doubleSlash from "pixelfx/fx/melee/double-slash";
@@ -25,9 +27,9 @@ import * as collectBurst from "pixelfx/fx/pickups/collect-burst";
 import * as chestOpen from "pixelfx/fx/pickups/chest-open";
 
 window.PixelFX = {
-  createFrame, clearFrame, createFx, composite,
+  createFrame, clearFrame, createFx, composite, poseAt, READY,
   FX: {
-    hitSpark, critHit, poof, plasmaExplosion, lootAura, aura, manaBurst,
+    hitSpark, critHit, poof, plasmaExplosion, lootAura, aura, hero, manaBurst,
     swordSlash, doubleSlash, spinSlash, hammerSmash, starFall, arcaneMissiles, chainLightning, thunderclap, fireRing, spawnPortal, collectBurst, chestOpen,
   },
 };

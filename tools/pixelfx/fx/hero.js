@@ -5,7 +5,7 @@
 // cajado, aljava.
 //
 // Opções: cls (knight, mage, archer, paladin), pose (objeto de pose do pixelfx), look ({a: armadura, c: pano, t: detalhe},
-// cores da skin), wind (0 a 1, quanto a capa balança), flip pelo place do createFx.
+// cores da skin), wc (cor da raridade da arma, opcional), wind (0 a 1, quanto a capa balança), shadow, flip pelo place.
 // Camadas: drawBack desenha a capa e o que fica atrás do corpo; draw desenha o corpo e o que fica na frente.
 import { posed, posedParts, skeleton, STAND, hex, mix, rgb, DUMMY_PAL } from "pixelfx";
 
@@ -44,7 +44,7 @@ const INK = P.k, SEAM = P.J, MARK = P.m;
 // ---------- materiais: 4 tons do claro ao escuro a partir de uma cor base
 const shades = (c) => { const b = hex(c); return [mix(b, hex("#ffffff"), 0.32), b, mix(b, hex("#000000"), 0.32), mix(b, hex("#000000"), 0.55)]; };
 const SKIN = shades("#f0b98e"), LEATHER = shades("#8a5a36"), DARK = shades("#3d3550"), GOLD = shades("#e8b830");
-const OUT = hex("#120d1a");
+const OUT = hex("#120d1a"), SHADOW = hex("#05040a");
 
 // que material veste cada parte, por classe (s: aço/armadura, c: pano, t: detalhe dourado, k: pele, l: couro, d: escuro)
 const DRESS = {
@@ -152,7 +152,7 @@ function quiver(L, J) {
 
 // ---------- o corpo vestido
 function body(p, o, M) {
-  const R = posed(o.pose || STAND), dress = DRESS[o.cls] || DRESS.knight, k = o.cls === "knight" || o.cls === "paladin";
+  const R = posed(o.pose || STAND), dress = DRESS[o.cls] || DRESS.knight, k = o.cls === "knight" || o.cls === "paladin", WC = o.wc ? hex(o.wc) : 0;
   for (let i = 0; i < R.n; i++) {
     let c = R.color[i] >>> 0;
     const x = R.xs[i], y = R.ys[i], s = R.src[i];
@@ -175,13 +175,15 @@ function body(p, o, M) {
       }
       if (c === MARK) col = k ? M.t[0] : col;
       c = col;
-    }
+    } else if (WC) c = mix(c, WC, 0.4); // arma: puxa para a cor da raridade equipada
     p.px(x, y, c);
   }
 }
 
 export function drawBack(p, t, o) {
   const M = mats(o), J = skeleton(o.pose || STAND).joints, L = new Layer();
+  // sombra pequena sob os pés (o herói 3D fazia sombra no chão; o sprite não faz)
+  if (o.shadow !== false) for (let y = -2; y <= 1; y++) for (let x = -10; x <= 10; x++) { const d = (x / 10) ** 2 + ((y + 0.5) / 2.2) ** 2; if (d <= 1) p.dot(x, y, SHADOW, 0.4 * (1 - d * 0.5)); }
   if (o.cls === "knight" || o.cls === "paladin" || o.cls === "mage") cape(L, J, o, M, o.wind || 0);
   if (o.cls === "archer") quiver(L, J);
   if (o.cls === "archer") hood(L, J, M);

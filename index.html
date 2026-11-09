@@ -729,7 +729,7 @@ const hy={knight:1.95,paladin:2.02,mage:1.8,archer:1.93}[k];buildHeadAcc(S.head,
 const gy=robe?1.3:1.33;if(rM<0||true){M(new THREE.OctahedronGeometry(.05),emi,0,gy-.1,robe?.215:arch?.2:.235,up)}gemH.position.set(0,gy-.1,.26);up.add(gemH);
 crown.position.y=(robe?2.5:2.12)+(S.head!=='h_none'?.28:0);crownH.position.y=crown.position.y;up.add(crown);up.add(crownH);
 wings.forEach(w=>{w.position.set(0,1.35,-.3);up.add(w)});
-hero.traverse(o=>o.layers.enable(1));heroDirty=true}
+hero.traverse(o=>o.layers.enable(1));heroDirty=true;if(window.__hero2d)heroSet()}
 buildHero();
 // ===================== aura =====================
 const ADD=THREE.AdditiveBlending;
@@ -943,14 +943,60 @@ function auraSet(i){const P=window.PixelFX;if(!P||!P.FX.aura)return;const m=P.FX
 function auraUpd(dt){if(AURA.fx){AURA.fx.update(dt);AURA.acc+=dt}}
 function auraDraw(){if(!AURA.fx)return;const P=window.PixelFX,[b,f]=AURA.parts,hp=hero.position;
  const r=tmp.copy(hp).sub(cam.position),dist=r.length();r.divideScalar(dist);const rh=Math.hypot(r.x,r.z)||1,[w,h]=P.FX.aura.meta.size;
- // o corpo da aura (BODY_TOP px) tem a altura do herói na tela: mede pés e cabeça projetados e converte para o mundo
- const yF=tmp2.copy(hp).project(cam).y,yH=tmp2.set(hp.x,hp.y+AURA_HERO_H,hp.z).project(cam).y,tanF=Math.tan(cam.fov*Math.PI/360);
- const k=(yH-yF)/2*2*tanF*dist/(P.FX.aura.BODY_TOP||30);
+ // o corpo da aura (BODY_TOP px) tem a altura do herói na tela (o de pixel art, ou o 3D quando o pixelfx não carrega)
+ const k=screenK(hp,HERO2D.fx?HERO_H:AURA_HERO_H,P.FX.aura.BODY_TOP||30,dist);
  // força pela intensidade escolhida na aba Herói (Suave, Média, Intensa)
  const lv=S.auraLv??1,op=[.75,.95,1][lv];
  for(const [q,s] of [[b,AURA_BACK],[f,-AURA_FRONT]]){const tt=s/rh,sc2=(dist+tt)/dist;q.spr.position.set(hp.x+r.x*tt,hp.y+r.y*tt+.02,hp.z+r.z*tt);q.spr.scale.set(w*k*sc2,h*k*sc2,1);q.mat.opacity=op}
  if(AURA.acc<1/(GFX()===0?AURA_HZ_LITE:AURA_HZ))return;AURA.acc=0;
  for(const [q,layer] of [[b,'back'],[f,'front']]){P.clearFrame(q.fr);AURA.fx.draw(q.fr,layer);P.composite(q.fr,q.img.data,null);q.cx.putImageData(q.img,0,0);q.tex.needsUpdate=true;q.spr.visible=true}}
+// ---- herói em pixel art (tools/pixelfx/fx/hero.js): o esqueleto do pixelfx vestido por classe, num sprite nos pés.
+// O herói 3D continua existindo (posição, direção, retrato antigo), só fica escondido. As poses vêm dos próprios golpes
+// do pixelfx: corte da espada, martelada, mísseis arcanos e giro de lâmina; o arqueiro tem as dele.
+const HERO2D={fx:null,part:null,acc:1,anim:null,flip:false,moving:false},HERO2D_HZ=24,HERO_PX=38,HERO_H=3;
+const hero2dOK=()=>pfxOK()&&!!window.PixelFX.FX.hero;
+const HWP={knight:{weapon:'sword',fx:12,fy:-21,sa:-.85},paladin:{weapon:'hammer',two:true,sa:.62,fx:11,fy:-21,crouch:3},
+ archer:{weapon:'bow',fx:12,fy:-24,sa:0,bx:6,by:-24},mage:{fx:8,fy:-20,bx:-4,by:-17,sa:-1.35}};
+// arco: puxa a corda, segura, solta (t em segundos, como nas trilhas dos golpes)
+const BOW_TRACK=[[0,{...HWP.archer,crouch:2}],[.1,{...HWP.archer,crouch:3,fx:16,fy:-25,bx:4,by:-25,pull:1,nocked:1,lean:-2}],[.2,{...HWP.archer,crouch:3,fx:16,fy:-25,bx:-1,by:-25,pull:1,nocked:1,lean:-3}],[.24,{...HWP.archer,crouch:2,fx:16,fy:-25,bx:8,by:-24,lean:2},'snap'],[.45,{...HWP.archer,crouch:2}]];
+const BOW_UP=[[0,{...HWP.archer,crouch:2}],[.15,{...HWP.archer,crouch:4,fx:10,fy:-34,bx:2,by:-30,sa:-.9,pull:1,nocked:1,lean:-4}],[.32,{...HWP.archer,crouch:4,fx:10,fy:-34,bx:-2,by:-29,sa:-.9,pull:1,nocked:1,lean:-5}],[.36,{...HWP.archer,crouch:3,fx:10,fy:-34,bx:6,by:-30,sa:-.9,lean:-2},'snap'],[.6,{...HWP.archer,crouch:2}]];
+// trilha de cada golpe: [poses, de, até]; os tempos dos golpes do pixelfx começam antes do impacto (t negativo)
+function heroTrack(kind){const F=window.PixelFX.FX,k=S.cls;
+ if(kind==='spin'&&k==='knight')return[F.spinSlash.act.poses,-.05,.22];
+ if(k==='knight')return[F.swordSlash.act.poses,-.3,.58];if(k==='paladin')return[F.hammerSmash.act.poses,-.44,kind==='sp'?1.02:.62];
+ if(k==='mage')return[F.arcaneMissiles.act.poses,-.24,kind==='sp'?1.2:.5];return kind==='sp'?[BOW_UP,0,.6]:[BOW_TRACK,0,.45]}
+// golpe: kind 'atk' cabe no intervalo de ataque (acelera se precisar); 'sp' o especial; 'spin' gira enquanto durar
+function heroAnim(kind,dur){if(!HERO2D.fx)return;const [tr,a,b]=heroTrack(kind),span=b-a;HERO2D.anim={tr,a,b,t:0,sp:kind==='atk'?Math.max(1,span/Math.max(.2,dur*.9)):1,loop:kind==='spin'?dur:0,x0:(tr[0][1].x||0)}}
+function heroPose(dt){const w=HWP[S.cls]||HWP.knight,A=HERO2D.anim,P=window.PixelFX;
+ if(A){A.t+=dt*A.sp;let tt=A.a+A.t;if(A.loop){A.loop-=dt;tt=A.a+(A.t%(A.b-A.a));if(A.loop<=0)HERO2D.anim=null}else if(tt>=A.b)HERO2D.anim=null;
+  const q={...P.poseAt(A.tr,Math.min(tt,A.b))},dx=(q.x||0)-A.x0,dy=q.y||0;delete q.x;delete q.y;q.ghost=0;return{q,dx,dy}}
+ if(kneel)return{q:{...P.READY,...w,crouch:8,lean:4,fx:10,fy:-10,bx:4,by:-10},dx:0,dy:0};
+ if(HERO2D.moving){const s=Math.sin(walk),c=Math.cos(walk);return{q:{...P.READY,...w,crouch:(w.crouch||0)+1+Math.abs(s)*1.5,ffx:2+8*s,ffy:-Math.max(0,4*c),fbx:-1-8*s,fby:-Math.max(0,-4*c),bx:(w.bx??9)-4*s,lean:3},dx:0,dy:-Math.abs(c)*.8}}
+ const br=Math.sin(performance.now()/1000*2.4);return{q:{...P.READY,...w,crouch:(w.crouch??3)+(br>0?1:0)},dx:0,dy:0}}
+const hx6=c=>'#'+new THREE.Color(c).getHexString();
+// monta (ou refaz) o sprite com a roupa da classe, as cores da skin e a raridade da armadura e da arma
+function heroSet(){if(!hero2dOK())return;const P=window.PixelFX,m=P.FX.hero,[w,h]=m.meta.size,[ox,oy]=m.meta.origin;
+ if(!HERO2D.part)HERO2D.part=auraPart(w,h,ox,oy,10);
+ const O=outfitOf(S.cls,S.skin),rA=eqR('armor'),rW=eqR('weapon');
+ const look={a:hx6(O.a),c:hx6(O.c),t:rA>=0?'#'+rcol(rA).getHexString():hx6(O.t)};
+ HERO2D.fx=P.createFx(m,{x:ox,y:oy,cls:S.cls,look,wc:rW>=0?'#'+rcol(rW).getHexString():null,pose:{...P.READY,...(HWP[S.cls]||HWP.knight)},wind:.4});HERO2D.ox=ox;HERO2D.oy=oy;HERO2D.acc=1;
+ hero.children.forEach(o=>o.visible=false)}
+// px do mundo por px do desenho, para que `px` px tenham a altura de `worldH` unidades em pé no lugar do herói, na tela
+window.__hero2d=1;heroSet();
+function screenK(hp,worldH,px,dist){const yF=tmp2.copy(hp).project(cam).y,yH=tmp2.set(hp.x,hp.y+worldH,hp.z).project(cam).y;return (yH-yF)*Math.tan(cam.fov*Math.PI/360)*dist/px}
+function heroDraw(dt){const H=HERO2D;if(!H.fx)return;const P=window.PixelFX,q=H.part,hp=hero.position,[w,h]=P.FX.hero.meta.size;
+ const dist=tmp.copy(hp).sub(cam.position).length(),k=screenK(hp,HERO_H,HERO_PX,dist);
+ q.spr.position.set(hp.x,hp.y+.02,hp.z);q.spr.scale.set(w*k,h*k,1);
+ H.acc+=dt;if(H.acc<1/HERO2D_HZ)return;const st=H.acc;H.acc=0;
+ // para onde o herói olha, na tela: o desenho olha para a direita e espelha quando ele vira para a esquerda
+ const a=tmp2.set(hp.x+Math.sin(face),0,hp.z+Math.cos(face)).project(cam).x,b=tmp.copy(hp).project(cam).x;if(Math.abs(a-b)>.002)H.flip=a<b;
+ const {q:pose,dx,dy}=heroPose(st),o=H.fx.options;o.pose=pose;o.flip=H.flip;o.x=H.ox+(H.flip?-dx:dx);o.y=H.oy+dy;H.fx.update(st);
+ P.clearFrame(q.fr);H.fx.draw(q.fr);P.composite(q.fr,q.img.data,null);q.cx.putImageData(q.img,0,0);q.tex.needsUpdate=true;q.spr.visible=true}
+// retrato do perfil em pixel art: cabeça e tronco do herói, ampliados sem borrar
+function heroBust(){const P=window.PixelFX,m=P.FX.hero,[w,h]=m.meta.size,[ox,oy]=m.meta.origin,fr=P.createFrame(w,h);
+ const fx=P.createFx(m,{...HERO2D.fx.options,pose:{...P.READY,...(HWP[S.cls]||HWP.knight)},flip:false,x:ox,y:oy,shadow:false});fx.draw(fr);
+ const c0=document.createElement('canvas');c0.width=w;c0.height=h;const g0=c0.getContext('2d'),im=g0.createImageData(w,h);P.composite(fr,im.data,null);g0.putImageData(im,0,0);
+ const c=document.createElement('canvas');c.width=c.height=PSZ;const g=c.getContext('2d');g.imageSmoothingEnabled=false;const s=30;g.drawImage(c0,ox-s/2+2,oy-44,s,s,PSZ*.1,PSZ*.14,PSZ*.8,PSZ*.8);return c}
 function pfxKill(e){sc.remove(e.spr);const q=PFX_POOL[e.R.key]||(PFX_POOL[e.R.key]=[]);if(q.length<PFX_POOL_MAX)q.push(e.R);else{e.tex.dispose();e.mat.dispose()}}
 function pfxUpd(dt){if(!window.PixelFX)return;
 for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}
@@ -977,7 +1023,7 @@ if(e.tw){if(e.boss)S.bosses++;towerKill(e)}else if(e.boss){bossOn=false;S.bosses
 else if(!bossOn){S.kills=Math.min(10,S.kills+1)}}
 function addXp(x){S.xp+=x;let up=0;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up++}if(up){SFX.lvl();burst(hero.position.x,.2,hero.position.z,70,0xffd966,5,5);pfx('manaBurst',hero.position.x,0,hero.position.z,{follow:hero.position,palette:['#3a1d00','#a8650b','#ffd966','#fff6c8']});num(hero.position,'NÍVEL '+S.lvl+'!','#ffd966',22,2.3);const ti=tierOf(S.lvl);if(ti>S.tier){S.tier=ti;tierUp(ti)}}}
 function tierUp(i){applyTier(i);checkProfile(false);renderAvatar();SFX.tier();flashScreen(.9);shake=.7;shockT=0;shockR=7;shockP.copy(hero.position);for(let k=0;k<4;k++)burst(hero.position.x,1,hero.position.z,90,k%2?C0:C1,8,8,.5);pfx('manaBurst',hero.position.x,0,hero.position.z,{scale:1.6,follow:hero.position,palette:auraPal()});banner('AURA '+TIERS[i].n.toUpperCase()+'!','Toque em 📣 para compartilhar',TIERS[i].css);$('share').style.boxShadow='0 0 18px var(--c)'}
-function attack(){const C=CLS();atkT=atkIv();swingT=.22;const L=S.up.crit,c=Math.random()<critC(L),d=dmg()*(c?critM(L):1)*(furyT>0?1.5:1);if(c)shake=Math.max(shake,.12);
+function attack(){const C=CLS();atkT=atkIv();swingT=.22;heroAnim('atk',atkT);const L=S.up.crit,c=Math.random()<critC(L),d=dmg()*(c?critM(L):1)*(furyT>0?1.5:1);if(c)shake=Math.max(shake,.12);
 if(C.rng){if(c&&S.cls==='mage')pfx('arcaneMissiles',hero.position.x,0,hero.position.z,{scale:PFX_BODY,flip:leftOf(hero.position,target.g.position),palette:auraPal()});fireShot(target,d,c);if(S.cls==='archer'){tone(900,.06,'triangle',.05,.6);if(Math.random()<.18){const tg=target;setTimeout(()=>{if(tg&&!tg.dead)fireShot(tg,d,false)},90)}}else tone(420,.15,'sine',.08,2);return}
 SFX.hit(c);arcPiv.position.copy(hero.position);arcPiv.rotation.y=face-Math.PI/2;
 {const q=target.g.position,fl=leftOf(hero.position,q);if(S.cls==='paladin'){if(c)pfx('hammerSmash',q.x,0,q.z,{scale:PFX_BODY,flip:fl})}else pfx(c?'doubleSlash':'swordSlash',hero.position.x,0,hero.position.z,{scale:PFX_BODY,flip:fl,minor:!c})}
@@ -985,7 +1031,7 @@ hit(target,d,c,2.5);
 if(S.cls==='paladin'){holyT=0;holy.position.set(hero.position.x,.1,hero.position.z);enemies.forEach(e=>{if(e===target||e.dead)return;if(e.g.position.distanceTo(hero.position)-e.T.r<2.3)hit(e,d*.4,false,2.5)});return}
 const fx=Math.sin(face),fz=Math.cos(face);enemies.forEach(e=>{if(e===target||e.dead)return;const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,dd=Math.hypot(dx,dz)||.01;if(dd-e.T.r<1.9&&(dx*fx+dz*fz)/dd>.3)hit(e,d*.5,false,2)})}
 function special(){spT=spCdAt(S.up.aura);LF().specials++;const d=spDmgAt(S.up.aura)*(furyT>0?1.5:1),k=S.cls;pL.intensity=14;SFX.boom();burst(hero.position.x,.3,hero.position.z,50,C1,5,2,.4);
-if(k==='knight'){spinT=1.2;spinTick=0;spinD=d;shake=.2}else if(k==='mage'){meteorSpec(d);shake=.15}else if(k==='archer'){rainSpec(d)}else{judgeSpec(d);shake=.5}}
+heroAnim(k==='knight'?'spin':'sp',1.2);if(k==='knight'){spinT=1.2;spinTick=0;spinD=d;shake=.2}else if(k==='mage'){meteorSpec(d);shake=.15}else if(k==='archer'){rainSpec(d)}else{judgeSpec(d);shake=.5}}
 function tapAttack(x,y){audioInit();const r=rd.domElement.getBoundingClientRect();let best=null,bd=75;
 chests.forEach(c=>{if(c.open)return;const v=c.g.position.clone().add(new THREE.Vector3(0,.3,0)).project(cam),d=Math.hypot((v.x+1)/2*r.width-x,(1-v.y)/2*r.height-y);if(d<bd){bd=d;best=c}});
 if(best){best.prio=1;toast('Seu herói vai abrir esse baú');return}
@@ -1068,7 +1114,7 @@ else if(k==='p_star'){for(let i=0;i<10;i++)spark(rr()*n,rr()*n,2+rr()*6,'rgba(25
 else if(k==='p_crown'){g.fillStyle='#ffd24a';g.strokeStyle='#8a5a00';g.lineWidth=2;const cx=n/2,cy=n*.1;g.beginPath();g.moveTo(cx-34,cy+22);g.lineTo(cx-34,cy);g.lineTo(cx-17,cy+12);g.lineTo(cx,cy-8);g.lineTo(cx+17,cy+12);g.lineTo(cx+34,cy);g.lineTo(cx+34,cy+22);g.closePath();g.fill();g.stroke();['#ff2a4a','#2a8aff','#2aff8a'].forEach((c,i)=>{g.fillStyle=c;g.beginPath();g.arc(cx-17+i*17,cy+16,3.5,0,7);g.fill()});for(let i=0;i<14;i++){const x=rr()*n,y=n*.9+rr()*n*.1;g.fillStyle='#ffcf4a';g.beginPath();g.ellipse(x,y,9,4,0,0,7);g.fill();g.strokeStyle='#a87a10';g.stroke()}}
 else if(k==='p_gem'){[[0,n,1],[n,n,-1]].forEach(([x,y,d])=>{for(let i=0;i<3;i++){g.fillStyle=`rgba(${160+i*30},245,255,.75)`;g.beginPath();g.moveTo(x,y);g.lineTo(x+d*(20+i*14),y-(60+i*25));g.lineTo(x+d*(36+i*14),y-(10+i*8));g.closePath();g.fill()}});for(let i=0;i<6;i++)spark(rr()*n,rr()*n,3+rr()*4,'rgba(220,255,255,.9)')}}
 function portraitURL(pk){if(portCache[pk])return portCache[pk];const c=document.createElement('canvas');c.width=c.height=PSZ;const g=c.getContext('2d');drawTheme(g,pk,PSZ);
-try{const b=renderBust(PCFG[pk]||PCFG.p_knight);g.save();g.shadowColor='rgba(0,0,0,.65)';g.shadowBlur=16;g.drawImage(b,0,0);g.restore()}catch(e){}
+try{const b=HERO2D.fx?heroBust():renderBust(PCFG[pk]||PCFG.p_knight);g.save();g.shadowColor='rgba(0,0,0,.65)';g.shadowBlur=16;g.drawImage(b,0,0);g.restore()}catch(e){}
 drawFore(g,pk,PSZ);const gl=g.createLinearGradient(0,0,0,PSZ);gl.addColorStop(0,'rgba(255,255,255,.12)');gl.addColorStop(.4,'rgba(255,255,255,0)');g.fillStyle=gl;g.fillRect(0,0,PSZ,PSZ);portCache[pk]=c.toDataURL('image/jpeg',.88);return portCache[pk]}
 // ---------- molduras únicas (SVG)
 let svgN=0;
@@ -1347,7 +1393,7 @@ if(kneel){}else if(goC){tmp.copy(goC.g.position).sub(hero.position);tmp.y=0;if(t
 else if(target){tmp.copy(target.g.position).sub(hero.position);tmp.y=0;const d=tmp.length(),rng=CLS().rng?CLS().rng+target.T.r:target.T.r+1.05;const tf=Math.atan2(tmp.x,tmp.z);let df=tf-face;df=Math.atan2(Math.sin(df),Math.cos(df));face+=df*Math.min(1,dt*12);if(d>rng){tmp.normalize();hero.position.addScaledVector(tmp,4.4*(furyT>0?1.3:1)*dt);moving=true}else{atkT-=dt;if(atkT<=0)attack()}}
 else{tmp.set(-hero.position.x,0,-hero.position.z);if(tmp.length()>.5){tmp.normalize();hero.position.addScaledVector(tmp,2*dt);face=Math.atan2(tmp.x,tmp.z);moving=true}}
 const hr=Math.hypot(hero.position.x,hero.position.z);if(hr>11.5){hero.position.x*=11.5/hr;hero.position.z*=11.5/hr}
-hero.rotation.y=face+(spinT>0?(1.2-spinT)*22:0);if(moving)walk+=dt*11;legs[0].rotation.x=moving?Math.sin(walk)*.6:legs[0].rotation.x*.8;legs[1].rotation.x=moving?-Math.sin(walk)*.6:legs[1].rotation.x*.8;
+hero.rotation.y=face+(spinT>0?(1.2-spinT)*22:0);HERO2D.moving=moving;if(moving)walk+=dt*11;legs[0].rotation.x=moving?Math.sin(walk)*.6:legs[0].rotation.x*.8;legs[1].rotation.x=moving?-Math.sin(walk)*.6:legs[1].rotation.x*.8;
 spT-=dt;if(spT<=0&&S.up.aura>0&&enemies.some(e=>!e.dead&&e.g.position.distanceTo(hero.position)<(CLS().rng?8:4.5)))special();
 // espíritos
 const ns=Math.min(8,S.up.spirit);spirits.forEach((s,i)=>{s.visible=i<ns;if(!s.visible)return;const a=t*1.6+i/Math.max(1,ns)*6.283;s.position.set(hero.position.x+Math.cos(a)*1.15,1.4+Math.sin(t*3+i)*.15,hero.position.z+Math.sin(a)*1.15)});
@@ -1410,7 +1456,7 @@ lookT.lerp(zoomCam?tmp.set(hero.position.x,1.2,hero.position.z):tmp.set(hero.pos
 moon.position.set(hero.position.x-6,12,hero.position.z+6);moon.target.position.copy(hero.position);
 const r=rd.domElement.getBoundingClientRect();
 for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.l+=dt;n.p.y+=dt*n.vy;n.vy*=.96;tmp.copy(n.p).project(cam);const sc2=n.l<.12?.6+n.l/.12*.6:1.2-Math.min(.2,(n.l-.12));n.el.style.transform=`translate(${(tmp.x+1)/2*r.width}px,${(1-tmp.y)/2*r.height}px) translate(-50%,-50%) scale(${sc2})`;{const sy=(1-tmp.y)/2*r.height,hf=Math.max(0,Math.min(1,(sy-HUDB)/28));n.el.style.opacity=(n.l>.7?1-(n.l-.7)/.4:1)*hf}if(n.l>1.1){n.el.remove();nums.splice(i,1)}}
-auraDraw();pfxDraw();chestDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
+heroDraw(dt);auraDraw();pfxDraw();chestDraw();if(composer&&GFX()===1)composer.render();else rd.render(sc,cam);if(heroDirty){heroDirty=false;for(const k in portCache)delete portCache[k];renderAvatar();if(curTab==='prof')renderProfile()}}
 function updHud(){$('goldv').textContent=fmt(S.gold);$('gps').textContent='+'+fmt(S.gps)+'/s'+(furyT>0?'  ·  FÚRIA x2':'')+(Date.now()<(S.boostUntil||0)?'  ·  OURO x2 '+Math.ceil((S.boostUntil-Date.now())/60000)+'min':'');$('lvl').textContent='Nv '+S.lvl;$('xp').style.width=(S.xp/xpNeed(S.lvl)*100)+'%';
 const sb=$('sbar');if(tower.on&&tower.wb){const B=wbBoss();$('stg').textContent='CHEFE MUNDIAL';$('world').textContent=B.n;sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/WB_T*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=B.ic+' DANO '+fmt(tower.run||0)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else if(tower.on){$('stg').textContent='TORRE · ANDAR '+tower.f;$('world').textContent='Torre de Desafio';sb.classList.add('boss');$('sfill').style.width=Math.max(0,tower.t/40*100)+'%';$('bossl').classList.remove('hidden');$('bossl').textContent=(tower.boss?'GUARDIÃO':'ABATES '+Math.min(tower.kills,tower.need)+'/'+tower.need)+' · '+Math.ceil(Math.max(0,tower.t))+'s'}else{$('world').textContent=$('world').textContent==='Torre de Desafio'?WORLDS[worldOf(S.stage)].n:$('world').textContent;
 $('stg').textContent='ESTÁGIO '+S.stage+(S.stage%10===0?' 💀':'');

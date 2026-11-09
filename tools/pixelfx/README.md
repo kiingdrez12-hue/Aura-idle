@@ -56,6 +56,16 @@ porque custava 8 ms em média, com picos de 45 ms.
   escondidas e a luz da aura sobe para o peito, mais fraca, para não fazer mancha no chão.
   Nada é desenhado abaixo dos pés, e `tests/headless/auras.js` confere.
 
+- `hero.js`: os heróis em pixel art. O esqueleto do pixelfx (`rig.js`, o boneco dos golpes) resolve a pose e entrega
+  cada pixel com tom e parte do corpo; aqui cada parte veste o material da classe (aço, pano, couro, pele, dourado)
+  nas cores da skin, e entram as peças extras: elmo com pluma (cavaleiro), asas douradas e cruz (paladino), chapéu,
+  barba, manto em sino e cajado (mago), capuz e aljava (arqueiro), capa. A cor da raridade da armadura vai para os
+  detalhes e a da arma puxa a lâmina. No jogo (`heroSet`, `heroDraw`, `heroPose`): sprite nos pés, 38 px de corpo =
+  `HERO_H` (3) unidades em pé na tela; parado respira, andando dá passos, o golpe toca a trilha do efeito da classe
+  (`swordSlash`, `hammerSmash`, `arcaneMissiles`; o arqueiro tem `BOW_TRACK`), o especial do cavaleiro gira com
+  `spinSlash`, e o desenho espelha quando o herói vira para a esquerda da tela. O modelo 3D continua montado (posição,
+  direção) mas escondido; o retrato do perfil vem de `heroBust`. `tests/headless/herois-pixel.js` confere.
+
 `loot-aura.js`, a espada do `loot-beam` com poça, anéis e brilhos baixos na cor da raridade (opção `power`, de 0 a 1,
 para raridades altas), sem a coluna de luz.
 
