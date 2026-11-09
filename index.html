@@ -230,7 +230,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .tab.on .ti{filter:none;opacity:1;transform:scale(1.12)}
 .tab .tl{white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;font-weight:800}
 .tab .dot{top:3px!important;right:4px!important;width:7px!important;height:7px!important;box-shadow:0 0 0 2px #10131f}
-#banner{top:31%!important;padding:0 12px}
+/* aviso grande embaixo, junto das outras notificações: logo acima da lista de itens; com o cartão do baú aberto na
+   direita, ele se centraliza no espaço à esquerda do cartão */
+#banner{top:auto!important;bottom:96px;padding:0 12px;transition:opacity .25s,transform .35s cubic-bezier(.2,1.6,.4,1),right .25s}
+#chestCard:not(.hidden)~#banner{right:122px}
 #banner .a{font-size:20px!important;line-height:1.1;overflow-wrap:anywhere}
 #banner .b{font-size:11px!important}
 #banner::before{content:'';position:absolute;left:8%;right:8%;top:-8px;bottom:-8px;background:radial-gradient(ellipse at center,rgba(5,6,14,.55),transparent 70%);z-index:-1}
