@@ -857,7 +857,7 @@ function dropItem(pos,r,il){const R=RAR[r],col=new THREE.Color(R.c),g=new THREE.
 const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06+r*.03,.2+r*.06,3+r*1.2,12,1,true),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:ADD,depthWrite:false,side:THREE.DoubleSide,opacity:.6}));beam.position.y=(3+r*1.2)/2;g.add(beam);const h=halo(.9+r*.25,col);h.position.y=.5;g.add(h);
 const a=Math.random()*6.283,d=.6+Math.random()*1.2;g.position.set(pos.x+Math.cos(a)*d,0,pos.z+Math.sin(a)*d);sc.add(g);
 // item no chão: espada do pixelfx com brilho da raridade só em volta (sem feixe para cima); sem pixelfx, a joia 3D
-const fx=pfx('lootAura',g.position.x,0,g.position.z,{scale:1.3,follow:g.position,palette:['#'+col.clone().multiplyScalar(.2).getHexString(),'#'+col.clone().multiplyScalar(.6).getHexString(),'#'+col.getHexString(),'#ffffff'],power:r/7});
+const fx=pfx('lootAura',g.position.x,0,g.position.z,{scale:1.3,hz:15,follow:g.position,palette:['#'+col.clone().multiplyScalar(.2).getHexString(),'#'+col.clone().multiplyScalar(.6).getHexString(),'#'+col.getHexString(),'#ffffff'],power:r/7});
 beam.visible=!fx&&r>=1;drops.push({g,gem,beam,halo:h,fx,it:makeItem(r,il),t:0,r});burst(g.position.x,.5,g.position.z,12+r*10,col,2+r*.6,4);
 if(r>=3){shake=Math.max(shake,.2+r*.06);SFX.tier()}else tone(660+r*200,.18,'triangle',.1)}
 function addItem(it){if(S.items.length>=60){const pool=S.items.filter(i=>!isEq(i)).sort((a,b)=>a.r-b.r||itemScore(a)-itemScore(b));const low=pool[0];if(low&&low.r<=it.r){S.items.splice(S.items.indexOf(low),1);S.frag+=fragOf(low)}else{S.frag+=fragOf(it);feed('Mochila cheia · desmanchado','#9fe8ff');return}}
@@ -903,11 +903,16 @@ const PFX=[],PFX_PPU=26,PFX_MAX=8,PFX_MINOR=5,PFX_HZ=30,PFX_HZ_LITE=15,PFX_BUDGE
 function pfx(id,x,y,z,o={}){const P=window.PixelFX;if(!P||!P.FX[id])return null;const lite=GFX()===0;
 if(o.minor&&(lite||PFX.length>=PFX_MINOR))return null;while(PFX.length>=(lite?4:PFX_MAX))pfxKill(PFX.shift());
 const mod=P.FX[id],[w,h]=mod.meta.size,[ox,oy]=mod.meta.origin,op={x:ox,y:oy,seed:Math.random()*1e9|0,flip:!!o.flip};if(o.palette)op.palette=o.palette;if(o.accent)op.accent=o.accent;if(o.power!=null)op.power=o.power;if(o.actor)op.actor=o.actor;
-const fx=P.createFx(mod,op),cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
-const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
-const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false}),spr=new THREE.Sprite(mat),k=(o.scale||1)/PFX_PPU;
+const fx=P.createFx(mod,op),key=w+'x'+h,R=(PFX_POOL[key]||[]).pop()||pfxRes(P,w,h,key),spr=R.spr,k=(o.scale||1)/PFX_PPU;
 spr.center.set(ox/w,1-oy/h);spr.scale.set(w*k,h*k,1);spr.position.set(x,y,z);spr.renderOrder=20;spr.visible=false;sc.add(spr);
-const e={fx,fr:P.createFrame(w,h),img:cx.createImageData(w,h),cx,tex,mat,spr,life:o.life||1e9,follow:o.follow,acc:1};PFX.push(e);return e}
+const e={fx,R,fr:R.fr,img:R.img,cx:R.cx,tex:R.tex,mat:R.mat,spr,life:o.life||1e9,follow:o.follow,acc:1,hz:o.hz||0};PFX.push(e);return e}
+// canvas, textura, sprite e buffers são reaproveitados entre efeitos do mesmo tamanho: criar e descartar texturas
+// a cada efeito pesa na placa de vídeo do celular e gera pausas do coletor de lixo
+const PFX_POOL={},PFX_POOL_MAX=6;
+function pfxRes(P,w,h,key){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');
+const tex=new THREE.CanvasTexture(cv);tex.magFilter=tex.minFilter=THREE.NearestFilter;tex.generateMipmaps=false;tex.encoding=THREE.sRGBEncoding;
+const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false});
+return{key,cv,cx,tex,mat,spr:new THREE.Sprite(mat),fr:P.createFrame(w,h),img:cx.createImageData(w,h)}}
 // lado da tela: true se b fica à esquerda de a (efeitos direcionais do pixelfx apontam para a direita)
 const leftOf=(a,b)=>b.x<a.x;
 // paleta nas cores da aura atual (escuro → claro)
@@ -917,14 +922,14 @@ const NO_ACTOR={mask:{w:0,h:0,data:new Uint8Array(0)},x:0,y:0,w:0,h:0,head:[0,-3
 // o pixelfx usa uma figura de 38 px; com esta escala ela fica do tamanho do herói
 const PFX_BODY=1.3;
 const pfxOK=()=>!!window.PixelFX;
-function pfxKill(e){sc.remove(e.spr);e.tex.dispose();e.mat.dispose()}
+function pfxKill(e){sc.remove(e.spr);const q=PFX_POOL[e.R.key]||(PFX_POOL[e.R.key]=[]);if(q.length<PFX_POOL_MAX)q.push(e.R);else{e.tex.dispose();e.mat.dispose()}}
 function pfxUpd(dt){if(!window.PixelFX)return;
 for(let i=PFX.length-1;i>=0;i--){const e=PFX[i];e.fx.update(dt);if(e.fx.t>e.life)e.fx.stop();if(e.fx.done()){pfxKill(e);PFX.splice(i,1);continue}
 if(e.follow)e.spr.position.x=e.follow.x,e.spr.position.z=e.follow.z;e.acc+=dt}}
 // desenha uma vez por quadro renderizado (não a cada step), a 30 qps (15 no modo Leve), que é a taxa dos efeitos do pixelfx.
 // Se passar de PFX_BUDGET ms, o resto fica para o próximo quadro, em rodízio, para não travar o celular.
 function pfxDraw(){const P=window.PixelFX,n=PFX.length;if(!P||!n)return;const hz=1/(GFX()===0?PFX_HZ_LITE:PFX_HZ),t0=performance.now();
-for(let k=0;k<n;k++){const e=PFX[(pfxRR+k)%n];if(e.acc<hz)continue;if(k&&performance.now()-t0>PFX_BUDGET){pfxRR=(pfxRR+k)%n;return}
+for(let k=0;k<n;k++){const e=PFX[(pfxRR+k)%n];if(e.acc<(e.hz?Math.max(hz,1/e.hz):hz))continue;if(k&&performance.now()-t0>PFX_BUDGET){pfxRR=(pfxRR+k)%n;return}
 e.acc=0;P.clearFrame(e.fr);e.fx.draw(e.fr);P.composite(e.fr,e.img.data,null);e.cx.putImageData(e.img,0,0);e.tex.needsUpdate=true;e.spr.visible=true}pfxRR=0}
 // monstro fora da cena (Chefe Mundial, Torre, ascensão ou chefão que fugiu) não leva mais golpes em voo
 function hit(e,d,crit,kb,src){if(!e||e.dead||!e.g.parent)return;e.hp-=d;if(e.wb)wbHit(e,d);e.flash=.1;if(kb){const dx=e.g.position.x-hero.position.x,dz=e.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=e.boss?.2:1;e.kb.set(dx/l*kb*k,0,dz/l*kb*k)}
