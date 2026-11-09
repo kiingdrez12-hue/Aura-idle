@@ -4,7 +4,7 @@ module.exports={run:async p=>{
   const o={};ensureSeason();o.id=S.ss.id;o.wm=S.ss.wm.map(m=>m.t);o.ready0=ssReady();
   addSXP(2600);o.lv=ssLevel();o.ready=ssReady();
   return o});
- await p.click('.tab[data-t=jor]');await p.waitForTimeout(400);
+ await p.click('#jorBtn');await p.waitForTimeout(400);
  const r2=await p.evaluate(()=>{const g0=S.gems,f0=S.frag,e0=S.eggs.slice();claimSeason();return{gems:S.gems-g0,frag:S.frag-f0,eggs:S.eggs,got:Object.keys(S.ss.got),ready:ssReady(),
   // simula fim do passe e virada de temporada
   }});

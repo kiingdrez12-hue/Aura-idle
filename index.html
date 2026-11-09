@@ -143,6 +143,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .rew div{display:flex;justify-content:space-between;gap:8px}.rew .ok{color:#5aff8a}.rew .no{opacity:.55}
 .rlist{text-align:left;font-size:14px;line-height:2;margin:8px 0}
 .hl{display:flex;gap:8px;align-items:flex-start}
+/* Jornada no canto superior esquerdo, embaixo do retrato (a aba dela sai da barra de baixo e fica só para o código) */
+.tabj{display:none!important}
+.avcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+.jorb{pointer-events:auto;position:relative;width:46px;padding:4px 0 3px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(10,12,22,.66);color:#fff;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font-family:inherit}
+.jorb i{font-style:normal;font-size:19px;line-height:1}.jorb span{font-size:8.5px;font-weight:800;letter-spacing:.02em;opacity:.85}
+.jorb.on{border-color:var(--c);box-shadow:0 0 10px -3px var(--c)}
+.jorb .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff3a5a;display:none;box-shadow:0 0 0 2px #0a0c16}.jorb .dot.on{display:block}
 .avb{pointer-events:auto;background:none;border:0;padding:0;cursor:pointer}
 .pf{position:relative;flex:none}
 .pf img{position:absolute;left:16%;top:16%;width:68%;height:68%;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
@@ -224,7 +231,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
 .evd.on{opacity:1;background:rgba(255,217,102,.14);border:1px solid rgba(255,217,102,.5)}.evd b{min-width:34px;font-size:11px;opacity:.7}
 
 /* === UI fixes: tabs grid, banner, toast === */
-.tabs{display:grid!important;grid-template-columns:repeat(8,1fr);gap:3px!important;padding:6px 6px 0!important;overflow:visible!important}
+.tabs{display:grid!important;grid-template-columns:repeat(7,1fr);gap:3px!important;padding:6px 6px 0!important;overflow:visible!important}
 .tab{min-width:0!important;padding:6px 0 5px!important;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px!important;letter-spacing:0!important;text-transform:none}
 .tab .ti{font-style:normal;font-size:17px;line-height:1;filter:grayscale(.6);opacity:.75;transition:.2s}
 .tab.on .ti{filter:none;opacity:1;transform:scale(1.12)}
@@ -283,7 +290,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
  <div id="view">
   <div id="nums"></div><div id="flash"></div>
   <div class="hud">
-   <div class="hl"><button class="avb" id="avatar" aria-label="Perfil"></button><div class="goldbox">
+   <div class="hl"><div class="avcol"><button class="avb" id="avatar" aria-label="Perfil"></button><button class="jorb" id="jorBtn" aria-label="Jornada"><i>🗺️</i><span>Jornada</span><b class="dot" id="dotJor"></b></button></div><div class="goldbox">
     <div class="gold cz" id="gold"><span class="coin"></span><span id="goldv">0</span></div>
     <div class="gps" id="gps">+0/s</div><div class="gems">💎 <span id="gemv">0</span></div>
     <div class="lvl"><b id="lvl">Nv 1</b><div class="xpb"><i id="xp"></i></div></div>
@@ -299,7 +306,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07080f;font-family:sy
   <div id="banner"><div class="a cz" id="ba"></div><div class="b" id="bb"></div></div>
  </div>
  <div id="panel">
-  <div class="tabs"><button class="tab on" data-t="up"><i class="ti">⚔️</i><span class="tl">Melhorar</span><span class="dot" id="dotUp"></span></button><button class="tab" data-t="inv"><i class="ti">🎒</i><span class="tl">Itens</span><span class="dot" id="dotInv"></span></button><button class="tab" data-t="pet"><i class="ti">🐾</i><span class="tl">Mascotes</span><span class="dot" id="dotPet"></span></button><button class="tab" data-t="jor"><i class="ti">🗺️</i><span class="tl">Jornada</span><span class="dot" id="dotJor"></span></button><button class="tab" data-t="tal"><i class="ti">🌳</i><span class="tl">Talentos</span><span class="dot" id="dotTal"></span></button><button class="tab" data-t="hero"><i class="ti">🧙</i><span class="tl">Herói</span><span class="dot" id="dotHero"></span></button><button class="tab" data-t="prof"><i class="ti">👤</i><span class="tl">Perfil</span><span class="dot" id="dotProf"></span></button><button class="tab" data-t="asc"><i class="ti">✨</i><span class="tl">Ascensão</span><span class="dot" id="dotAsc"></span></button></div>
+  <div class="tabs"><button class="tab on" data-t="up"><i class="ti">⚔️</i><span class="tl">Melhorar</span><span class="dot" id="dotUp"></span></button><button class="tab" data-t="inv"><i class="ti">🎒</i><span class="tl">Itens</span><span class="dot" id="dotInv"></span></button><button class="tab" data-t="pet"><i class="ti">🐾</i><span class="tl">Mascotes</span><span class="dot" id="dotPet"></span></button><button class="tab tabj" data-t="jor" aria-hidden="true" tabindex="-1"><i class="ti">🗺️</i><span class="tl">Jornada</span></button><button class="tab" data-t="tal"><i class="ti">🌳</i><span class="tl">Talentos</span><span class="dot" id="dotTal"></span></button><button class="tab" data-t="hero"><i class="ti">🧙</i><span class="tl">Herói</span><span class="dot" id="dotHero"></span></button><button class="tab" data-t="prof"><i class="ti">👤</i><span class="tl">Perfil</span><span class="dot" id="dotProf"></span></button><button class="tab" data-t="asc"><i class="ti">✨</i><span class="tl">Ascensão</span><span class="dot" id="dotAsc"></span></button></div>
   <div class="pg" id="pgUp"><div class="qty"><span>Comprar</span><button class="qb on" data-q="1">x1</button><button class="qb" data-q="10">x10</button><button class="qb" data-q="max">MÁX</button></div><div id="rows"></div></div>
   <div class="pg hidden" id="pgInv">
    <div class="frag"><span>EQUIPADOS</span><span>✨ <b id="fragv">0</b> fragmentos</span></div>
@@ -1305,8 +1312,9 @@ function checkUnlocks(){UP.forEach(u=>{if(!unlocked[u.k]&&S.maxStage>=u.un){unlo
 function buy(u){if(!unlocked[u.k])return;const L=S.up[u.k],n=buyN(u);if(n<=0)return;const c=costN(u,L,n);if(c>S.gold)return;S.gold-=c;S.up[u.k]+=n;LF().buys+=n;SFX.buy();const el=rowEls[u.k].r;el.animate([{transform:'scale(1.03)',background:'#2c3350'},{transform:'scale(1)',background:'#1d2236'}],{duration:260});burst(hero.position.x,.4,hero.position.z,14,0xffd966,2.5,3);updPanel(true)}
 document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>{qty=b.dataset.q;document.querySelectorAll('.qb').forEach(z=>z.classList.toggle('on',z===b));updPanel(true)});
 const PGS={up:'pgUp',inv:'pgInv',pet:'pgPet',jor:'pgJor',hero:'pgHero',tal:'pgTal',prof:'pgProf',asc:'pgAsc'};let curTab='up';
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{curTab=b.dataset.t;document.querySelectorAll('.tab').forEach(z=>z.classList.toggle('on',z===b));Object.entries(PGS).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==curTab));updAsc();if(curTab==='inv'){invDirty=true;renderInv()}if(curTab==='hero'){S.seenHero=1;renderHero()}if(curTab==='tal')renderTalPg();if(curTab==='prof'){S.seenProf=1;renderProfile()}if(curTab==='jor')renderJornada();if(curTab==='pet')renderPets()});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{curTab=b.dataset.t;document.querySelectorAll('.tab').forEach(z=>z.classList.toggle('on',z===b));$('jorBtn').classList.toggle('on',curTab==='jor');if(curTab==='jor')$('dotJor').classList.remove('on');Object.entries(PGS).forEach(([k,id])=>$(id).classList.toggle('hidden',k!==curTab));updAsc();if(curTab==='inv'){invDirty=true;renderInv()}if(curTab==='hero'){S.seenHero=1;renderHero()}if(curTab==='tal')renderTalPg();if(curTab==='prof'){S.seenProf=1;renderProfile()}if(curTab==='jor')renderJornada();if(curTab==='pet')renderPets()});
 $('avatar').onclick=()=>document.querySelector('.tab[data-t=prof]').click();
+$('jorBtn').onclick=()=>{audioInit();document.querySelector('.tab[data-t=jor]').click()};
 // ===================== herói / recompensas =====================
 const hex=c=>'#'+new THREE.Color(c).getHexString();
 function renderHero(){const cg=$('clsg');cg.innerHTML='';CLASSES.forEach(c=>{const u=S.ucls.includes(c.k),b=document.createElement('button');b.className='cc'+(S.cls===c.k?' on':'')+(u?'':' lk');b.innerHTML=`<span class="e">${c.ic}</span><b>${c.n}</b><small>${c.d}</small><small style="color:var(--c);opacity:1;font-weight:800">✨ ${SPN[c.k]}</small>`+(u?'':`<span class="lkt">🔒 ${c.asc}ª ascensão</span>`);b.onclick=()=>{if(!u){toast(`Faça ${c.asc} ascens${c.asc>1?'ões':'ão'} para liberar o ${c.n}`);return}if(S.cls===c.k)return;S.cls=c.k;buildHero();applyTier(tierIdx);SFX.tier();flashScreen(.4);for(let i=0;i<3;i++)burst(hero.position.x,1,hero.position.z,60,C1,4,6);banner(c.n.toUpperCase(),c.d.split(' · ')[0]);renderHero();updPanel();save()};cg.appendChild(b)});
