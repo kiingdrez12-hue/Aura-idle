@@ -12,3 +12,6 @@ production/session-state/*
 .claude/agent-memory/
 .claude/worktrees/
 docs/consistency-failures.md
+
+# capturas de evidência da QA ficam no repositório (padrão do projeto)
+!production/qa/evidence/*.png
