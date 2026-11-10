@@ -1,5 +1,7 @@
 // Auras do Aura Idle: um efeito próprio, no estilo do pixelfx, desenhado EM VOLTA do corpo do herói (nada no chão).
-// A forma nasce da silhueta do próprio herói em pixel art (o boneco em pé do rig2x, espelhado e engordado um pouco
+// Em todos os tiers há uma REDOMA de energia envolvendo o herói inteiro (ver `dome`), que cresce e ganha enfeites
+// a cada tier; dentro e em volta dela ficam as chamas e os efeitos de cada tier.
+// A forma das chamas nasce da silhueta do próprio herói em pixel art (o boneco em pé do rig2x, espelhado e engordado um pouco
 // para cobrir elmo, chapéu e capa): um campo de distância até ela diz onde fica o contorno, e cada tier desenha
 // uma coisa diferente em volta, com silhueta própria (labareda, vento, raios, asas, órbitas).
 //
@@ -163,6 +165,108 @@ function pulse(p, ph, C, { every = 1, reach = 20 }) {
       if (Math.abs(d - R) < 1 && ((gx + gy) & 1 || k < 0.45)) p.dot(gx + X0, y, k < 0.3 ? C[7] : k < 0.6 ? C[6] : C[4], 1);
     }
   }
+}
+
+// ---------- a redoma: uma cúpula de energia que envolve o herói inteiro, apoiada no chão aos pés dele
+// Camada de trás: o preenchimento translúcido e a metade de trás dos meridianos e da base.
+// Camada da frente: a borda, o brilho que varre o vidro, a metade da frente dos meridianos e os enfeites do tier.
+const DOME_CY = -5; // o centro da base fica um pouco acima dos pés, para a borda de baixo não passar do chão
+const DOME = [
+  /* 0 Comum      */ { rx: 27, ry: 58, rim: 1, fill: 0.10, mer: 0, lat: 0, hexa: 0 },
+  /* 1 Incomum    */ { rx: 28, ry: 60, rim: 1, fill: 0.12, mer: 2, lat: 0, hexa: 0, streak: 1 },
+  /* 2 Rara       */ { rx: 29, ry: 61, rim: 2, fill: 0.12, mer: 2, lat: 1, hexa: 0, zap: 1 },
+  /* 3 Épica      */ { rx: 30, ry: 62, rim: 2, fill: 0.14, mer: 3, lat: 1, hexa: 1 },
+  /* 4 Lendária   */ { rx: 31, ry: 64, rim: 3, fill: 0.16, mer: 3, lat: 2, hexa: 1 },
+  /* 5 Mítica     */ { rx: 32, ry: 65, rim: 3, fill: 0.30, mer: 3, lat: 2, hexa: 0, dark: 1, crack: 1 },
+  /* 6 Ancestral  */ { rx: 32, ry: 66, rim: 2, fill: 0.14, mer: 4, lat: 2, hexa: 0, glyph: 1 },
+  /* 7 Exaltada   */ { rx: 33, ry: 67, rim: 3, fill: 0.14, mer: 0, lat: 0, hexa: 0, facet: 1 },
+  /* 8 Divina     */ { rx: 34, ry: 69, rim: 3, fill: 0.18, mer: 4, lat: 2, hexa: 1, crown: 1 },
+  /* 9 Primordial */ { rx: 36, ry: 72, rim: 4, fill: 0.16, mer: 5, lat: 3, hexa: 1, rainbow: 1 },
+];
+function dome(p, ph, C, layer, style) {
+  const o = DOME[style], br = 1 + 0.025 * Math.sin(ph * TAU * 4), rx = o.rx * br, ry = o.ry * br, cy = DOME_CY, front = layer === "front";
+  const hue = (k) => hsl((ph + k) % 1, 0.9, 0.66);
+  const col = (i, k = 0) => (o.rainbow ? (i >= 7 ? WHITE : hsl((ph + k) % 1, 0.9, 0.34 + i * 0.07)) : C[i]);
+  const halfW = (y) => { const v = 1 - ((y - cy) / ry) ** 2; return v > 0 ? rx * Math.sqrt(v) : -1; };
+  const top = Math.ceil(cy - ry);
+  if (!front) {
+    // vidro: preenchimento translúcido, mais denso junto à borda (parece volume), e trama de hexágonos nos tiers altos
+    for (let y = top; y <= -1; y++) {
+      const hw = halfW(Math.min(y, cy));
+      if (hw < 0) continue;
+      for (let x = -Math.ceil(hw); x <= hw; x++) {
+        const e = Math.abs(x) / hw, v = (y - cy) / ry, edge = Math.max(e, Math.sqrt(e * e * (1 - v * v) + v * v));
+        let a = o.fill * (0.45 + 0.9 * edge * edge * edge);
+        if (o.hexa) { const hy = Math.floor((y - ph * 24) / 6), hx = x + (hy & 1 ? 4 : 0), m = ((hx % 8) + 8) % 8, n = (((y - Math.floor(ph * 24)) % 6) + 6) % 6; if (n === 0 || (m === 0 && n < 4)) a += 0.16 * edge; }
+        p.blend(x, y, o.dark ? C[0] : col(4, y * 0.006), Math.min(0.6, a));
+      }
+    }
+  }
+  // meridianos girando: a cúpula roda em volta do herói (metade de trás pontilhada, metade da frente sólida)
+  for (let m = 0; m < o.mer; m++) {
+    const a = ph * TAU * (o.mer > 3 ? 2 : 1) + (m / o.mer) * Math.PI, sn = Math.sin(a), isFront = Math.cos(a) > 0;
+    for (const sgn of [1, -1]) {
+      if ((sgn > 0 ? isFront : !isFront) !== front) continue;
+      for (let y = top + 1; y <= cy; y++) {
+        const hw = halfW(y); if (hw < 0) continue;
+        if (!front && (y & 1)) continue;
+        const x = Math.round(sgn * sn * hw);
+        p.dot(x, y, col(front ? 6 : 4, y * 0.006 + m * 0.2), 1);
+        if (front) p.blend(x + 1, y, col(3, y * 0.006), 0.6);
+      }
+    }
+  }
+  // paralelos: anéis horizontais subindo pela cúpula (frente sólida, trás pontilhada)
+  for (let l = 0; l < o.lat; l++) {
+    const f = (ph * 2 + l / o.lat) % 1, y0 = cy - f * ry * 0.96, hw = halfW(y0), ryy = hw * 0.16;
+    if (hw < 3) continue;
+    const N = Math.ceil(hw * 5);
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * TAU, s2 = Math.sin(a);
+      if ((s2 > 0) !== front) continue;
+      if (!front && i % 2) continue;
+      const x = Math.cos(a) * hw, y = y0 + s2 * ryy;
+      if (y > -1) continue;
+      p.dot(x, y, col(f < 0.15 ? 7 : front ? 6 : 4, f), 1 - f * 0.5);
+    }
+  }
+  // a base: uma elipse no pé da cúpula (metade de trás atrás do herói, metade da frente na frente)
+  { const N = 96; for (let i = 0; i < N; i++) { const a = (i / N) * TAU, s2 = Math.sin(a); if ((s2 > 0) !== front) continue; const x = Math.cos(a) * rx, y = cy + s2 * 4; p.dot(x, y, col(front ? 6 : 4, i / N), 1); if (front) p.dot(x, y - 1, col(4, i / N), 1); } }
+  if (!front) return;
+  // a borda: contorno escuro por fora, linha clara e degradê para dentro
+  for (let y = top - 1; y <= cy; y++) {
+    const hw = halfW(y), hwUp = halfW(y - 1);
+    if (hw < 0) continue;
+    for (const sgn of [-1, 1]) {
+      const xe = Math.round(hw), from = hwUp < 0 ? 0 : Math.round(hwUp);
+      for (let x = Math.min(from, xe); x <= xe; x++) { // cobre os degraus no topo, onde a borda fica quase horizontal
+        for (let q = 0; q <= o.rim + 1; q++) {
+          const dx = sgn * (x - q), yy = y + (hwUp < 0 || xe - from > 1 ? q : 0);
+          if (q && Math.abs(dx) > hw) continue;
+          if (yy > -1) continue;
+          const c = q === 0 ? col(2, y * 0.006) : q === 1 ? col(7) : q <= o.rim ? col(6 - Math.min(2, q - 2), y * 0.006) : null;
+          if (c !== null) p.dot(xe - x > 0 ? sgn * x : sgn * (xe - q), xe - x > 0 ? y + q : y, c, 1);
+          else p.blend(sgn * (xe - q), y, col(5, y * 0.006), 0.45);
+        }
+      }
+    }
+  }
+  // brilho do vidro: um arco claro no alto à esquerda e um reflexo que varre a cúpula de vez em quando
+  for (let i = 0; i < 26; i++) { const a = Math.PI * (1.12 + i * 0.011), x = Math.cos(a) * rx * 0.74, y = cy + Math.sin(a) * ry * 0.84; p.dot(x, y, WHITE, i < 4 || i > 21 ? 0.6 : 1); if (i > 5 && i < 20) p.dot(x + 1, y, col(6), 1); }
+  const sw = ((ph * 3) % 1) * 2.4 - 0.7;
+  if (sw > -0.2 && sw < 1.2) for (let y = top; y <= cy; y++) { const hw = halfW(y); if (hw < 2) continue; const x = -hw + sw * 2 * hw + (y - cy) * 0.35; for (let q = 0; q < 3; q++) if (Math.abs(x + q) < hw - 1) p.blend(x + q, y, WHITE, q === 1 ? 0.5 : 0.25); }
+  // enfeites do tier, sobre o vidro
+  if (o.streak) for (let b = 0; b < 4; b++) { const f = (ph * 3 + b / 4) % 1, y0 = cy - (0.15 + b * 0.2) * ry, hw = halfW(y0); for (let s = 0; s < 12; s++) { const a = (f + s * 0.012) * Math.PI, x = -Math.cos(a) * hw, y = y0 + Math.sin(a) * hw * 0.16 - s * 0.2; p.dot(x, y, s > 8 ? WHITE : C[6], 1); } }
+  if (o.zap || o.crack) { const f = Math.floor(ph * (o.crack ? 36 : 72)), r = new Rng(4000 + f * 13); for (let i = 0; i < (o.crack ? 3 : 4); i++) { const a = Math.PI * (1 + r.next()), x0 = Math.cos(a) * rx * 0.97, y0 = cy + Math.sin(a) * ry * 0.97, a2 = a + r.range(-0.5, 0.5), k = r.range(0.45, 0.8); const pts = bolt(r, x0, y0, Math.cos(a2) * rx * k, cy + Math.sin(a2) * ry * k, { jag: 0.35, depth: 3 }); for (const q of pts) q[1] = Math.min(q[1], -3); for (let j = 1; j < pts.length; j++) { p.line(pts[j - 1][0], pts[j - 1][1] + 1, pts[j][0], pts[j][1] + 1, C[3], 1); p.line(pts[j - 1][0], pts[j - 1][1], pts[j][0], pts[j][1], j < 3 ? WHITE : C[6], 1); } p.glow(x0, y0, 7, C[5], 0.5); } }
+  if (o.facet) { // cúpula de cristal: arestas retas de um poliedro e um brilho correndo por elas
+    const V = [[0, -1], [-0.62, -0.8], [0.62, -0.8], [-0.95, -0.36], [0, -0.52], [0.95, -0.36], [-0.99, -0.02], [-0.42, -0.1], [0.42, -0.1], [0.99, -0.02]].map(([x, y]) => [x * rx * 0.985, cy + y * ry * 0.985]);
+    const E = [[0, 1], [0, 2], [1, 2], [1, 3], [1, 4], [2, 4], [2, 5], [3, 4], [4, 5], [3, 6], [3, 7], [4, 7], [4, 8], [5, 8], [5, 9], [7, 8]];
+    E.forEach(([a, b], i) => { p.line(V[a][0], V[a][1], V[b][0], V[b][1], (Math.floor(ph * 32) + i) % 16 === 0 ? WHITE : i % 3 ? C[5] : C[6], 0.9); });
+    V.forEach(([x, y], i) => { if ((Math.floor(ph * 24) + i * 3) % 10 === 0) glint(p, Math.round(x), Math.round(y), 3, C[7], 1); });
+  }
+  if (o.glyph) for (let i = 0; i < 5; i++) { const a = ((ph + i / 5) % 1) * TAU; if (Math.sin(a) <= 0) continue; const hw = halfW(cy - ry * 0.45), X = Math.round(Math.cos(a) * hw * 0.92) - 2, Y = Math.round(cy - ry * 0.45 + Math.sin(a) * 4) - 2, g = GLYPH[i % 4]; for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) if (g[r][c] === "1") p.dot(X + c, Y + r, C[7], 1); p.glow(X + 2.5, Y + 2.5, 7, C[5], 0.45); }
+  if (o.crown) { const y = top - 1; for (let j = 1; j <= 7; j++) { p.dot(0, y - j, j < 5 ? WHITE : C[6], 1); if (j < 5) { p.dot(-j, y + 2, C[7], 1); p.dot(j, y + 2, C[7], 1); } } glint(p, 0, y, 4, C[7], 1); }
+  if (o.rainbow) for (let i = 0; i < 6; i++) { const a = Math.PI * (1 + ((ph * 0.5 + i / 6) % 1)), x = Math.cos(a) * rx, y = cy + Math.sin(a) * ry; glint(p, Math.round(x), Math.round(y), 2 + (i % 2), hue(i / 6), 1); }
 }
 
 // ---------- os 10 estilos
@@ -359,9 +463,13 @@ export function drawBack(p, t, o) {
   // um brilho suave atrás do corpo em todos os tiers (termina na altura dos pés)
   p.glow(CHEST[0], CHEST[1] - 4, 30, C[5], 0.28);
   p.glow(CHEST[0], CHEST[1] - 4, 19, C[6], 0.22);
-  STYLES[clamp(o.style | 0, 0, 9)].back(p, t, ph, C);
+  const st = clamp(o.style | 0, 0, 9);
+  dome(p, ph, C, "back", st);
+  STYLES[st].back(p, t, ph, C);
 }
 export function draw(p, t, o) {
   const C = fit(o.palette, 8), ph = t / meta.duration;
-  STYLES[clamp(o.style | 0, 0, 9)].front(p, t, ph, C);
+  const st = clamp(o.style | 0, 0, 9);
+  STYLES[st].front(p, t, ph, C);
+  dome(p, ph, C, "front", st);
 }

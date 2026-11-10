@@ -44,7 +44,11 @@ porque custava 8 ms em média, com picos de 45 ms.
 
 `tools/pixelfx/fx/` guarda efeitos próprios do jogo, importados por `entry.js` como os do pixelfx. Hoje:
 
-- `aura.js`: a aura do herói. A forma nasce da silhueta do próprio herói em pixel art (o boneco em pé do `rig2x`,
+- `aura.js`: a aura do herói. Em todos os tiers há uma **redoma de energia** envolvendo o herói inteiro (`dome`,
+  tabela `DOME`): cúpula apoiada nos pés, com vidro translúcido, borda clara de contorno escuro, meridianos girando,
+  paralelos subindo, reflexo que varre o vidro e um enfeite por tier (vento, raios, trama de hexágonos, rachaduras,
+  runas, facetas de cristal, coroa, estrelas). A metade de trás vai em `drawBack` e a da frente em `draw`, por cima
+  do herói. Dentro e em volta ficam as chamas: a forma delas nasce da silhueta do próprio herói em pixel art (o boneco em pé do `rig2x`,
   espelhado e engordado 2 px, `BODY_TOP` = 48 px de altura); a distância até ela diz onde fica o contorno. A peça
   principal é `flame`: chama em faixas de cor (contorno escuro, três tons, fio branco junto ao herói), com duas
   oitavas de ruído rolando para cima, base afinada nos pés, pedaços soltos nas pontas e uma onda de energia que sobe
