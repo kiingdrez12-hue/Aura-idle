@@ -34,6 +34,8 @@ module.exports={
   clear();spawnChestType(2);for(let i=0;i<40;i++){step(.05);if(chestCur){chestCur.acc=1;chestDraw()}if(chestCur&&!seen.chestOpen){seen.chestOpen=1}
    const d=$('chestCv').getContext('2d').getImageData(0,0,96,72).data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.chestOpen=1;break}}
   // aura do herói: efeito próprio fora do pfx, nas duas camadas
+  applyTier(3);for(let i=0;i<6;i++)step(.05);AURA.acc=1;auraDraw();seen.aura=1;
+  for(const q of AURA.parts){const d=q.img.data;for(let k=3;k<d.length;k+=16)if(d[k]>0){drew.aura=1;break}}
   // habilidades: cada herói lança as 4 (efeitos novos do pacote: uppercut, heavyCleave, groundSlam, fireball, ...)
   S.lvl=60;for(const k of ['knight','mage','archer','paladin']){S.cls=k;buildHero();for(let i=0;i<4;i++){clear();skCd=[0,0,0,0];skQ.length=0;const t=near();t.hp=1e12;t.max=1e12;target=t;skCast(i,true);run(16)}}
   // monstros: os bichos do pixelfx vestem os inimigos de cada cenário (todos os biomas, os três tipos e o chefão)

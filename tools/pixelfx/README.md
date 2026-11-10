@@ -26,6 +26,7 @@ Assim o jogo continua sem build: basta abrir `index.html`. Licença em `vendor/P
 | subir de nível | `arcane/mana-burst` (paleta dourada) |
 | baú (qualquer tier) | `pickups/chest-open` num cartão de notificação no canto inferior direito, com luz e madeira nas cores do tier (`chestPal`); o baú não cai mais no chão e a recompensa chega quando a tampa abre |
 | nova aura | `arcane/mana-burst` maior, nas cores da aura (sem coluna de luz) |
+| aura do herói (sempre ativa) | `tools/pixelfx/fx/aura.js`, efeito próprio com 10 estilos, um por tier, em volta do corpo (nada no chão); substitui o disco, as runas, o cilindro, a espiral, os anéis, a coroa e as asas 3D |
 
 No código (`index.html`): `pfx(id, x, y, z, opções)` cria um efeito na posição do mundo; `pfxUpd(dt)` roda dentro
 de `step` e `pfxDraw()` desenha uma vez por quadro, antes de renderizar. Cada efeito é desenhado num canvas e mostrado
@@ -43,9 +44,16 @@ porque custava 8 ms em média, com picos de 45 ms.
 
 `tools/pixelfx/fx/` guarda efeitos próprios do jogo, importados por `entry.js` como os do pixelfx. Hoje:
 
-- A aura do herói foi removida (o efeito `aura.js` saiu do pacote e as peças 3D antigas ficam escondidas). O tier
-  continua valendo para o nome no HUD e a cor dos golpes. `tests/headless/auras.js` confere que nada é desenhado.
-  O redesenho abandonado (chamas pela silhueta + redoma) está no branch `auras-novas`.
+- `aura.js`: a aura do herói. Um emblema circular de energia atrás dele, na altura do quadril (`CX`, `CY`, raio `R`;
+  `BODY_TOP` = 48 px é a altura do herói), em traço fino e brilhante, girando sem parar. Um tema por estilo/tier:
+  0 Comum, anel simples com cometa de luz; 1 Incomum, vendaval (lâminas de vento e folhas); 2 Rara, espiral de
+  tempestade (anel elétrico e faíscas); 3 Épica, círculo arcano (runas e estrela de seis pontas); 4 Lendária, coroa de
+  brasas (anel de fogo); 5 Mítica, lua de sangue (estrela de cinco pontas, lua e gotas); 6 Ancestral, bastião de gelo
+  (cristais para fora e neve); 7 Exaltada, órbita de cristal; 8 Divina, sol sagrado (raios e estrela de quatro
+  pontas); 9 Primordial, anéis do cosmos (arco-íris, ponteiros e cometas). `drawBack` vai atrás do herói e `draw` na
+  frente (a metade de baixo das órbitas), para o emblema parecer em volta do corpo. `auraDraw` escala o sprite para
+  que os `BODY_TOP` px tenham a altura do herói na tela; redesenho a 20 qps (10 no Leve). As peças 3D antigas ficam
+  escondidas. `tests/headless/auras.js` confere. (Tentativas anteriores, chamas e redoma, estão no branch `auras-novas`.)
 
 - `rig2x.js`: cópia do esqueleto do pixelfx (`src/core/rig.js`) que rasteriza o corpo e as armas numa grade de meio
   pixel (`SC` = 2): mesmo boneco e mesmas poses, com o dobro de resolução (contorno fino, sombreado suave, armas
